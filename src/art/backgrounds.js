@@ -466,7 +466,20 @@ function corniche() {
   };
 }
 
-const BUILDERS = { dohaday, tanta, alx, cairo, hearts, dunes, souq, corniche };
+// The opening street, after dark: the very same picture with the lights off.
+function dohanight() {
+  const bg = dohaday();
+  const stars = makeCanvas(320, 180);
+  const ctx = stars.getContext('2d');
+  bandedSky(ctx, ['#0d0f33', '#121544', '#1a1c56', '#252567', '#352e78', '#4c3a86'], 320, 180);
+  const r = rng(77);
+  for (let i = 0; i < 70; i++) rect(ctx, r() < 0.2 ? '#fff7e6' : '#a8a4d8', Math.floor(r() * 320), Math.floor(r() * 100));
+  return {
+    ...bg, sky: stars, sun: null, moon: { x: 268, y: 28 }, tint: '#141646', under: '#2a2440',
+  };
+}
+
+const BUILDERS = { dohaday, dohanight, tanta, alx, cairo, hearts, dunes, souq, corniche };
 
 export function buildBackground(theme) {
   return BUILDERS[theme]();

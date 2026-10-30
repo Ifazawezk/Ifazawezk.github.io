@@ -21,7 +21,11 @@ export function bakeSprites() {
     bugs: Object.fromEntries(Object.entries(BUGS).map(([k, frames]) => [k, frames.map(bakePair)])),
     deadline: bakeAll(DEADLINE),
     invite: bake(INVITE),
-    npcs: Object.fromEntries(Object.entries(NPCS).map(([k, frames]) => [k, frames.map(bakePair)])),
+    npcs: Object.fromEntries(Object.entries({
+      ...NPCS,
+      // A small kid with a very large bag. It is not him. It is just a kid.
+      kid: [STAGES[0].frames.run0, STAGES[0].frames.run2],
+    }).map(([k, frames]) => [k, frames.map(bakePair)])),
     props: bakeAll(PROPS),
   };
   return SPR;
@@ -40,7 +44,8 @@ function hash(x, y) {
 
 // Static tiles go on one big sheet so a frame only needs a single draw call.
 export function bakeWorld(world) {
-  const { tiles } = themeArt(world.theme);
+  const { tiles: street } = themeArt(world.theme);
+  const { tiles: desert } = themeArt('dunes');
   const sheet = makeCanvas(world.cols * TILE, world.rows * TILE);
   const ctx = sheet.getContext('2d');
   const animated = [];
@@ -53,6 +58,7 @@ export function bakeWorld(world) {
       if (type === T.AIR) continue;
       const px = x * TILE;
       const py = y * TILE;
+      const tiles = x >= world.sand.from && x < world.sand.to ? desert : street;
       if (type === T.SOLID) {
         const above = at(x, y - 1);
         const set = above === T.SOLID ? tiles.fill : tiles.top;
@@ -208,6 +214,17 @@ export function createRenderer(canvas) {
       rect(ctx, '#3f7fd1', x + 1, y + 1, m.w - 2, 12);
       for (let i = x + 4; i < x + m.w - 2; i += 5) rect(ctx, '#2a4d91', i, y + 2, 2, 10);
       rect(ctx, '#58d3e0', x + 1, y + 1, m.w - 2, 1);
+    } else if (m.kind === 'metro') {
+      rect(ctx, ink, x, y, m.w, 26);
+      rect(ctx, '#e6ecf0', x + 1, y + 1, m.w - 2, 24);
+      rect(ctx, '#fff7e6', x + 1, y + 1, m.w - 2, 2);
+      rect(ctx, '#7a2d3d', x + 1, y + 19, m.w - 2, 3);
+      for (let i = x + 6; i < x + m.w - 10; i += 14) {
+        rect(ctx, ink, i, y + 6, 10, 10);
+        rect(ctx, '#7fc4e6', i + 1, y + 7, 8, 8);
+      }
+      rect(ctx, ink, x + m.w - 8, y + 6, 6, 10);
+      rect(ctx, '#bfe6ef', x + m.w - 7, y + 7, 4, 8);
     } else if (m.kind === 'dhow') {
       paintDhow(ctx, x, y - 34, m.w);
     } else {
@@ -216,12 +233,12 @@ export function createRenderer(canvas) {
     }
   }
 
-  function drawGoal(world, g, cx, cy) {
+  function drawGoal(world, g, cx, cy, lit = true) {
     const goal = world.goal;
     const kind = world.goalKind;
-    if (!kind) return;
+    if (!kind || !lit) return;
     const img = getPiece(kind);
-    ctx.drawImage(img, goal.x - 8 - cx, goal.feet - img.height - cy);
+    ctx.drawImage(img, goal.x + world.goalDx - cx, goal.feet - img.height - cy);
   }
 
   function drawSigns(world, g, cx, cy) {
@@ -361,12 +378,20 @@ export function createRenderer(canvas) {
 
     drawBackground(ctx, art.bg, cx, cy, g.t);
     for (const p of world.props) drawProp(p, cx, cy, g.t, false);
-    drawGoal(world, g, cx, cy);
+    if (!art.bg.tint) drawGoal(world, g, cx, cy);
     for (const stall of world.stalls) {
       const x = stall.x - cx;
       if (x > -STALL_MARGIN && x < VIEW_W + 4) ctx.drawImage(state.stalls.get(stall), x, stall.feet - 72 - cy);
     }
     drawTiles(world, g, art, cx, cy);
+    // Night falls on the buildings, not on the people.
+    if (art.bg.tint) {
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = art.bg.tint;
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      ctx.globalAlpha = 1;
+    }
+    drawGoal(world, g, cx, cy, true);
     drawSigns(world, g, cx, cy);
     for (const m of world.movers) drawMover(world, m, g, cx, cy);
     drawCups(g, cx, cy);
@@ -458,6 +483,7 @@ export function drawPostcard(ctx, opts) {
   }
 
   const name = faza ?? (ending ? (Math.floor(t / 20) % 2 ? 'cheer' : 'idle0') : (t % 240 < 120 ? 'sip1' : 'sip0'));
+  if (ending) ctx.drawImage(getPiece('villaLit'), -8, floorY - 56);
   const img = SPR.faza[opts.stage ?? LAST_STAGE][name][1];
   ctx.drawImage(img, Math.round(fazaX), floorY - img.height);
   const cupFrame = Math.floor(t / 16) % 2;

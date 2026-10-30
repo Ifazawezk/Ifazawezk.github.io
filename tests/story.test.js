@@ -70,7 +70,7 @@ test('each level has the right age', () => {
   const { s } = run();
   const ages = Object.fromEntries(s.worlds.map((w) => [w.id, STAGES[w.stage].id]));
   assert.deepEqual(ages, {
-    home: 'kid', tanta: 'student', alx: 'student', cairo: 'pro', hearts: 'dev', dunes: 'grown', souq: 'grown', corniche: 'grown',
+    home: 'kid', tanta: 'student', alx: 'student', cairo: 'pro', hearts: 'dev', dunes: 'grown', souq: 'grown', corniche: 'grown', homecoming: 'grown',
   });
 });
 
@@ -79,7 +79,8 @@ test('the story starts in Doha, goes to Egypt, and ends back in Doha', () => {
   const order = s.worlds.map((w) => w.id);
   assert.equal(order[0], 'home');
   assert.equal(order[1], 'tanta');
-  assert.equal(order.at(-1), 'corniche');
+  assert.equal(order.at(-2), 'corniche');
+  assert.equal(order.at(-1), 'homecoming');
 });
 
 test('walking past the school gate turns the kid into a teenager, without stopping', () => {

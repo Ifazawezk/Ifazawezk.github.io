@@ -60,7 +60,7 @@ export const TRACKS = {
 export const DRUMS = ['D', 'T', _, 'T', 'D', _, 'T', _];
 
 export const TRACK_OF_LEVEL = {
-  home: 'day', tanta: 'day', alx: 'day', cairo: 'roof', hearts: 'night', dunes: 'day', souq: 'day', corniche: 'night',
+  home: 'day', tanta: 'day', alx: 'day', cairo: 'roof', hearts: 'night', dunes: 'day', souq: 'day', corniche: 'night', homecoming: 'night',
 };
 
 export const SFX = {

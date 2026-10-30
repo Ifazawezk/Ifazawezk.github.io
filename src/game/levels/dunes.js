@@ -12,6 +12,8 @@ export const dunes = {
     N: { bug: 'nullptr' },
     P: { prop: 'palm' },
     B: { prop: 'bush' },
+    H: { prop: 'landcruiser' },
+    Z: { sign: 'dunes.stuck' },
   },
   chunks: [
     [
@@ -66,7 +68,7 @@ export const dunes = {
       '                        ',
       '                        ',
       '                        ',
-      ' ! 3   B   o o    G     ',
+      ' ! 3   B Z  H   G       ',
       '########################',
       '########################',
     ],

@@ -7,8 +7,9 @@ import { hearts } from './hearts.js';
 import { dunes } from './dunes.js';
 import { corniche } from './corniche.js';
 import { souqDef } from './souq.js';
+import { homecoming } from './homecoming.js';
 
-export const LEVEL_DEFS = [home, tanta, alx, cairo, hearts, dunes, souqDef([]), corniche];
+export const LEVEL_DEFS = [home, tanta, alx, cairo, hearts, dunes, souqDef([]), corniche, homecoming];
 export const SOUQ_INDEX = 6;
 
 export function buildWorlds(repos = []) {

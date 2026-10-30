@@ -55,6 +55,12 @@ async function openGame(browser, size, query = '') {
   return { context, page };
 }
 
+// Where the landmarks are in the opening, in pixels along the street.
+const PLACES = [
+  ['karak', 800], ['waqif', 1300], ['metro', 2120], ['westbay', 2700], ['mia', 2930],
+  ['pearl', 3120], ['school3', 3300], ['katara', 3640], ['torch', 3800], ['desert', 4120], ['worldcup', 4500],
+].map(([name, x]) => ({ name, x }));
+
 // Walk through the tape, stopping at each level's interesting moment.
 async function playthrough(browser, size, tape, lang) {
   const tag = `${size}-${lang}`;
@@ -78,7 +84,11 @@ async function playthrough(browser, size, tape, lang) {
       return { ...r, id: w.id, cols: w.cols, stall: g.stall, levelT: g.levelT, bubble: g.bubble?.key ?? null, grow: g.phase === 'grow', growT: g.growT, boss: g.boss && g.boss.awake && !g.boss.defeated, bossHits: g.boss ? g.boss.maxHp - g.boss.hp : 0 };
     }, part);
     const progress = last.x / (last.cols * 16);
-    const moment = last.grow ? `grow${last.level}`
+    const place = PLACES.find((p) => last.id === 'home' && last.x >= p.x && !shot.has(p.name));
+    const moment = place ? place.name
+      : last.id === 'homecoming' && progress > 0.4 && !shot.has('homecoming') ? 'homecoming'
+      : last.id === 'homecoming' && progress > 0.74 && !shot.has('door') ? 'door'
+      : last.grow ? `grow${last.level}`
       : last.boss && last.bossHits > 0 ? 'boss'
         : last.id === 'souq' && last.stall >= 2 ? 'souq'
           : last.phase === 'play' && progress > 0.42 && last.bubble ? last.id
@@ -110,6 +120,14 @@ async function playthrough(browser, size, tape, lang) {
   check(`${tag}: the replay reaches the ending in the browser`, end.phase === 'ending' && end.screen, `score ${end.score}, ${end.cups} cups, ${end.stomped} bugs`);
   check(`${tag}: LinkedIn and GitHub buttons are live`, end.linkedin.includes('linkedin.com/in/mohanned-alhagar-b298b8272') && end.github === 'https://github.com/Ifazawezk');
   check(`${tag}: no sideways scrolling`, !end.overflow);
+  if (size === 'desktop') {
+    const side = await page.evaluate(() => {
+      const card = document.querySelector('.end-card').getBoundingClientRect();
+      const stage = document.getElementById('stage').getBoundingClientRect();
+      return card.left - stage.left;
+    });
+    check(`${tag}: the ending card leaves Faza and his door in view`, side > 150, `${Math.round(side)}px clear`);
+  }
   check(`${tag}: no errors in the page`, page.problems.length === 0, page.problems.slice(0, 2).join(' | '));
   await context.close();
   return end;

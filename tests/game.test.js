@@ -41,11 +41,16 @@ test('falling in water costs a retry and puts you back', () => {
 
 test('walking past a sign raises its bubble, then it fades', () => {
   const { s, g } = fresh();
-  const sign = worldOf(s, g).signs[0];
+  const world = worldOf(s, g);
+  const sign = world.signs[0];
   g.p.x = sign.x;
   step(s, g, none);
   assert.equal(g.bubble.key, sign.key);
-  g.p.x = sign.x + 140;
+  // Somewhere quiet: nothing to read within earshot.
+  const talkers = [...world.signs, ...world.npcs];
+  let quiet = sign.x + 64;
+  while (talkers.some((t) => Math.abs(t.x - quiet) < 80)) quiet += TILE;
+  g.p.x = quiet;
   for (let i = 0; i < 200; i++) step(s, g, none);
   assert.equal(g.bubble, null);
 });

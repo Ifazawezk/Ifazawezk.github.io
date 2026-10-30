@@ -141,6 +141,7 @@ const STYLES = {
     water: ['#2b8ea3', '#1f6f8a', '#a8e6ee'],
     bounce: ['#f2762e', '#b84a1f'],
   },
+  dohanight: null,
   souq: {
     top(ctx, r) { stones(ctx, r, '#c9a877', '#e6c99a', '#8a6a44'); rect(ctx, '#f0dcb4', 0, 0, 16, 2); rect(ctx, '#8a6a44', 0, 2, 16, 1); },
     fill(ctx, r) { stones(ctx, r, '#a98658', '#c9a877', '#6e5234'); },
@@ -157,7 +158,9 @@ const STYLES = {
   },
 };
 
-const HAZARD_OF = { dohaday: 'doha', tanta: 'tanta', alx: 'alx', cairo: 'cairo', hearts: 'hearts', dunes: 'doha', souq: 'doha', corniche: 'doha' };
+STYLES.dohanight = STYLES.dohaday;
+
+const HAZARD_OF = { dohaday: 'doha', dohanight: 'doha', tanta: 'tanta', alx: 'alx', cairo: 'cairo', hearts: 'hearts', dunes: 'doha', souq: 'doha', corniche: 'doha' };
 
 function ledgeTile(style) {
   const [base, dark, light] = style.ledge;
