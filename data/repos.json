@@ -1,0 +1,90 @@
+[
+  {
+    "name": "qanun",
+    "description": "Search Qatar's Labour Law in Arabic and English and get answers that cite the exact articles. Hybrid retrieval with a published evaluation. Not legal advice.",
+    "url": "https://github.com/Ifazawezk/qanun",
+    "language": "Python",
+    "stars": 0,
+    "pushed": "2026-10-30T11:09:24Z"
+  },
+  {
+    "name": "ACAS",
+    "description": "AI customer comment analysis in English and Arabic: emotion, intent, priority and automatic ticket routing. FastAPI.",
+    "url": "https://github.com/Ifazawezk/ACAS",
+    "language": "Python",
+    "stars": 2,
+    "pushed": "2026-10-28T15:57:00Z"
+  },
+  {
+    "name": "qar-budget",
+    "description": "Personal budget tracker for Qatar: QAR, monthly budgets, charts, CSV import/export, English and Arabic. TypeScript, no framework.",
+    "url": "https://github.com/Ifazawezk/qar-budget",
+    "language": "TypeScript",
+    "stars": 1,
+    "pushed": "2026-10-30T06:03:21Z"
+  },
+  {
+    "name": "sql-retail-analytics",
+    "description": "25 business questions answered in SQL for a Qatar grocery chain: cohorts, RFM, basket analysis, Ramadan effects. SQLite + Python.",
+    "url": "https://github.com/Ifazawezk/sql-retail-analytics",
+    "language": "Python",
+    "stars": 1,
+    "pushed": "2026-10-30T05:52:30Z"
+  },
+  {
+    "name": "ds_salary_proj",
+    "description": "What AI, ML and data jobs pay: analysis of 151k salaries plus a salary estimator CLI",
+    "url": "https://github.com/Ifazawezk/ds_salary_proj",
+    "language": "Python",
+    "stars": 2,
+    "pushed": "2026-10-28T15:35:07Z"
+  },
+  {
+    "name": "Koru_Paper",
+    "description": "Does human oversight of AI advice work? Re-analysis of 35k human-AI decisions",
+    "url": "https://github.com/Ifazawezk/Koru_Paper",
+    "language": "Jupyter Notebook",
+    "stars": 2,
+    "pushed": "2026-10-30T07:12:50Z"
+  },
+  {
+    "name": "British-airway-Task",
+    "description": "Scraping and sentiment analysis of 1,000 British Airways customer reviews",
+    "url": "https://github.com/Ifazawezk/British-airway-Task",
+    "language": "Jupyter Notebook",
+    "stars": 2,
+    "pushed": "2026-10-28T15:35:39Z"
+  },
+  {
+    "name": "linkcheck",
+    "description": "Fast broken-link checker for Markdown, HTML and websites. One binary, CI-friendly.",
+    "url": "https://github.com/Ifazawezk/linkcheck",
+    "language": "Go",
+    "stars": 1,
+    "pushed": "2026-10-30T06:10:34Z"
+  },
+  {
+    "name": "csvdiff",
+    "description": "Compare two CSV files by key: added, removed and changed rows. Text, JSON or Markdown output. No dependencies.",
+    "url": "https://github.com/Ifazawezk/csvdiff",
+    "language": "Python",
+    "stars": 1,
+    "pushed": "2026-10-30T06:08:54Z"
+  },
+  {
+    "name": "envcheck",
+    "description": "Check a .env file against .env.example before you deploy: missing keys, empty values, type hints. Never prints secrets.",
+    "url": "https://github.com/Ifazawezk/envcheck",
+    "language": "Go",
+    "stars": 1,
+    "pushed": "2026-10-30T05:45:27Z"
+  },
+  {
+    "name": "arabic-normalize",
+    "description": "Normalize Arabic text for search and NLP: diacritics, alef forms, tatweel, digits. Zero dependencies, TypeScript.",
+    "url": "https://github.com/Ifazawezk/arabic-normalize",
+    "language": "TypeScript",
+    "stars": 1,
+    "pushed": "2026-10-28T16:05:20Z"
+  }
+]

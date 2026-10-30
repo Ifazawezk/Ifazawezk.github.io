@@ -65,6 +65,7 @@ test('every level parses and has a start, a goal and something to read', () => {
     assert.ok(w.spawn.x >= 0, w.id);
     assert.ok(w.goal, w.id);
     assert.ok(w.signs.length > 0, `${w.id} has no signs`);
+    assert.ok(w.goalKind, `${w.id} has no goal art`);
   }
 });
 

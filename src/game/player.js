@@ -21,8 +21,10 @@ export function updatePlayer(p, input, world, t, { boost = 1, airJumps = 0 } = {
   if (wish !== 0) {
     p.dir = wish;
     p.vx += wish * accel * boost;
-    if (p.vx > max) p.vx = Math.max(max, p.vx - PHYS.FRICTION);
-    if (p.vx < -max) p.vx = Math.min(-max, p.vx + PHYS.FRICTION);
+    // Over top speed from a pad or a belt: bleed it off, slowly in the air.
+    const drag = p.onGround ? PHYS.FRICTION : 0.02;
+    if (p.vx > max) p.vx = Math.max(max, p.vx - drag - accel * boost);
+    if (p.vx < -max) p.vx = Math.min(-max, p.vx + drag + accel * boost);
   } else if (p.onGround) {
     if (Math.abs(p.vx) <= PHYS.FRICTION) p.vx = 0;
     else p.vx -= Math.sign(p.vx) * PHYS.FRICTION;

@@ -24,7 +24,7 @@ export const PHYS = {
   AIR_ACCEL: 0.12,
   FRICTION: 0.22,
   MAX_RUN: 1.75,
-  JUMP_V: -4.65,
+  JUMP_V: -4.9,
   JUMP_CUT: 0.45,
   COYOTE: 6,
   BUFFER: 7,
