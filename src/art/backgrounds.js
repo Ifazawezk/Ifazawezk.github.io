@@ -452,7 +452,7 @@ function corniche() {
   });
   return {
     sky: stars,
-    moon: { x: 262, y: 34 },
+    moon: { x: 298, y: 26 },
     layers: [
       { img: far, speed: 0.12, y: -4 },
       { img: near, speed: 0.24, y: 0 },
