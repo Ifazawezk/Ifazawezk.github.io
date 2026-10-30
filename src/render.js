@@ -1,4 +1,4 @@
-import { T, TILE, blinkPhase, PHYS } from './game/physics.js';
+import { T, TILE, isSolidTile } from './game/physics.js';
 import { moverPos } from './game/world.js';
 import { VIEW_W, VIEW_H } from './game/game.js';
 import { makeCanvas, rect } from './art/paint.js';
@@ -145,8 +145,6 @@ export function createRenderer(canvas) {
     ctx.drawImage(state.baked.sheet, cx, cy, VIEW_W, VIEW_H, 0, 0, VIEW_W, VIEW_H);
     const frame4 = Math.floor(g.t / 10) % 4;
     const belt = Math.floor(g.t / 5) % 4;
-    const phase = blinkPhase(g.t);
-    const warn = PHYS.BLINK_PERIOD / 2 - (g.t % (PHYS.BLINK_PERIOD / 2)) < 40;
     for (const a of state.baked.animated) {
       const sx = a.x - cx;
       if (sx < -TILE || sx > VIEW_W) continue;
@@ -164,8 +162,9 @@ export function createRenderer(canvas) {
         ctx.drawImage(art.tiles.speed[frame4], sx, sy);
       } else if (a.type === T.BLINK_A || a.type === T.BLINK_B) {
         const set = a.type === T.BLINK_A ? art.tiles.blinkA : art.tiles.blinkB;
-        const live = (a.type === T.BLINK_A ? 0 : 1) === phase;
-        const flicker = live && warn && Math.floor(g.t / 4) % 2 === 0;
+        const live = isSolidTile(a.type, g.t);
+        // Flicker for the last 40 ticks, so a vanishing tile warns you first.
+        const flicker = live && !isSolidTile(a.type, g.t + 40) && Math.floor(g.t / 4) % 2 === 0;
         ctx.drawImage(live && !flicker ? set.on : set.off, sx, sy);
       }
     }
@@ -208,7 +207,7 @@ export function createRenderer(canvas) {
       for (let i = x + 4; i < x + m.w - 2; i += 5) rect(ctx, '#2a4d91', i, y + 2, 2, 10);
       rect(ctx, '#58d3e0', x + 1, y + 1, m.w - 2, 1);
     } else if (m.kind === 'dhow') {
-      paintDhow(ctx, x - 8, y - 34, m.w + 16);
+      paintDhow(ctx, x, y - 34, m.w);
     } else {
       rect(ctx, ink, x, y, m.w, 8);
       rect(ctx, '#a86b3c', x + 1, y + 1, m.w - 2, 5);
@@ -369,5 +368,81 @@ export function createRenderer(canvas) {
 }
 
 const STALL_MARGIN = 96;
+
+// One small sprite on a dark tile, repeated behind the screen as wallpaper.
+export function paintWallpaper(el) {
+  bakeSprites();
+  const size = 72;
+  const c = makeCanvas(size, size);
+  const ctx = c.getContext('2d');
+  rect(ctx, '#17132b', 0, 0, size, size);
+  ctx.globalAlpha = 0.16;
+  ctx.drawImage(SPR.cup[0], 6, 8);
+  ctx.drawImage(SPR.bugs.nullptr[0][1], 42, 22);
+  ctx.drawImage(SPR.bugs.offbyone[0][1], 12, 50);
+  ctx.drawImage(SPR.cup[1], 54, 54);
+  ctx.globalAlpha = 1;
+  el.style.backgroundImage = `url(${c.toDataURL('image/png')})`;
+  el.style.backgroundSize = `${size * 3}px`;
+}
+
+function firework(ctx, cx, cy, t, colors) {
+  const age = t % 90;
+  if (age > 46) return;
+  const radius = age * 0.75;
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * Math.PI * 2;
+    const x = Math.round(cx + Math.cos(a) * radius);
+    const y = Math.round(cy + Math.sin(a) * radius + age * age * 0.012);
+    rect(ctx, colors[i % colors.length], x, y, age > 34 ? 1 : 2, age > 34 ? 1 : 2);
+  }
+}
+
+// The Doha night scene that the title, the ending, the social card and the
+// profile animation all share. It only uses the real game art.
+export function drawPostcard(ctx, opts) {
+  const {
+    t = 0, ending = false, reduced = false, camX = t * 0.25, floorY = 148,
+    faza = null, fazaX = 96, boss = !ending, dhow = true,
+  } = opts;
+  bakeSprites();
+  const art = themeArt('corniche');
+  const scroll = reduced ? 0 : camX;
+  drawBackground(ctx, art.bg, scroll, 0, t);
+
+  if (dhow) {
+    const x = reduced ? 190 : 340 - ((t * 0.18) % 520);
+    paintDhow(ctx, Math.round(x), floorY - 42, 92);
+  }
+  if (ending && !reduced) {
+    firework(ctx, 70, 44, t, ['#f7b733', '#fff7e6']);
+    firework(ctx, 170, 34, t + 30, ['#7a2d3d', '#fff7e6', '#f08fa8']);
+    firework(ctx, 262, 56, t + 60, ['#58d3e0', '#fff7e6']);
+  }
+
+  for (let x = -16; x < VIEW_W + 16; x += TILE) {
+    const n = (Math.floor(x / TILE) + 8) % 4;
+    ctx.drawImage(art.tiles.top[n], x, floorY);
+    ctx.drawImage(art.tiles.fill[n], x, floorY + TILE);
+    ctx.drawImage(art.tiles.fill[(n + 1) % 4], x, floorY + TILE * 2);
+  }
+
+  const lamp = SPR.props.lamp[1];
+  ctx.drawImage(lamp, 22, floorY - lamp.height);
+  const palm = SPR.props.palm[1];
+  ctx.drawImage(palm, 236, floorY - palm.height);
+
+  const name = faza ?? (ending ? (Math.floor(t / 20) % 2 ? 'cheer' : 'idle0') : (t % 240 < 120 ? 'sip1' : 'sip0'));
+  const img = SPR.faza[name][1];
+  ctx.drawImage(img, Math.round(fazaX), floorY - img.height);
+  const cupFrame = Math.floor(t / 16) % 2;
+  ctx.drawImage(SPR.cup[cupFrame], Math.round(fazaX) + 26, floorY - 10);
+
+  // The Deadline, peeking in from the edge of the title. It knows.
+  if (boss) {
+    const peek = 300 + Math.round(Math.sin(t / 50) * 4);
+    ctx.drawImage(SPR.deadline.walk0[-1], peek, floorY - 44);
+  }
+}
 
 export { drawText, textWidth, rect };

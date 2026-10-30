@@ -38,6 +38,10 @@ export function createUI({ lang, boringHref }) {
   function applyLang() {
     els.root.lang = state.lang;
     els.root.dataset.lang = state.lang;
+    // The stage keeps its layout; only the words change direction.
+    const dir = state.lang === 'ar' ? 'rtl' : 'ltr';
+    els.bubble.dir = dir;
+    els.banner.dir = dir;
     els.langBtn.textContent = t('ui.lang');
     els.langBtn.setAttribute('aria-label', t('ui.langLabel'));
     els.boring.textContent = t('ui.boring');

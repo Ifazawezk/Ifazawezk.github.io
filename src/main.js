@@ -12,7 +12,17 @@ const session = createSession();
 const game = createGame();
 game.best = store.get('best', 0);
 const renderer = createRenderer(document.getElementById('game'));
-const ui = createUI({ lang: 'en', boringHref: () => 'boring/' });
+const askedLang = new URLSearchParams(location.search).get('lang');
+const startLang = askedLang === 'ar' || askedLang === 'en' ? askedLang : store.get('lang', 'en');
+const ui = createUI({ lang: startLang, boringHref: (lang) => (lang === 'ar' ? 'boring/ar/' : 'boring/') });
+
+ui.els.langBtn.addEventListener('click', () => {
+  ui.state.lang = ui.state.lang === 'ar' ? 'en' : 'ar';
+  store.set('lang', ui.state.lang);
+  ui.applyLang();
+  // Otherwise Space, the jump key, would press this button again.
+  ui.els.langBtn.blur();
+});
 const input = createInput(() => { if (game.phase === 'title') begin(); });
 
 function begin() {

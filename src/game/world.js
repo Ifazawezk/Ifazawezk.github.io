@@ -28,9 +28,16 @@ export function stitch(chunks) {
   return rows;
 }
 
+// Out, pause, back, pause. `hold` is how long it waits at each end, in ticks.
 export function moverPos(m, t) {
-  const u = ((t + (m.phase || 0)) % m.period) / m.period;
-  const k = u < 0.5 ? u * 2 : 2 - u * 2;
+  const hold = m.hold ?? 0;
+  const travel = m.period / 2 - hold;
+  const u = (t + (m.phase || 0)) % m.period;
+  let k;
+  if (u < hold) k = 0;
+  else if (u < hold + travel) k = (u - hold) / travel;
+  else if (u < hold * 2 + travel) k = 1;
+  else k = 1 - (u - hold * 2 - travel) / travel;
   const e = k * k * (3 - 2 * k);
   return { x: m.x + m.dx * e, y: m.y + m.dy * e };
 }

@@ -13,7 +13,7 @@ export const corniche = {
     R: { bug: 'race' },
   },
   movers: [
-    { dx: 256, dy: 0, period: 660, tiles: 7, kind: 'dhow', sink: 4 },
+    { dx: 312, dy: 0, period: 800, tiles: 7, kind: 'dhow', sink: 4 },
   ],
   chunks: [
     [
@@ -40,7 +40,7 @@ export const corniche = {
       '                                    ',
       '                                    ',
       '                                    ',
-      '  1  M                              ',
+      '  1! M                              ',
       '####~~~~~~~~~~~~~~~~~~~~~~~~~~~~####',
       '####~~~~~~~~~~~~~~~~~~~~~~~~~~~~####',
     ],
@@ -54,7 +54,7 @@ export const corniche = {
       '           =====            ',
       '                            ',
       '                            ',
-      '     L   Y     R   L  2    !',
+      ' !   L   Y     R   L  2    !',
       '############################',
       '############################',
     ],

@@ -89,6 +89,7 @@ export function loadLevel(s, g, index) {
   g.checksOn = [];
   g.bubble = null;
   g.deadT = 0;
+  g.battery = FULL_BATTERY;
   g.cups = world.cups.map((c) => ({ x: c.x, y: c.y, w: 10, h: 10, taken: false }));
   g.bugs = world.bugs.map((b) => makeBug(b.type, b.x, b.feet, b));
   g.boss = world.bossSpawn ? makeBoss(world.bossSpawn, world) : null;
@@ -139,7 +140,8 @@ function updateMoversAndPlayer(g, world, input) {
   if (p.vy >= 0) {
     for (let i = 0; i < world.movers.length; i++) {
       const m = world.movers[i];
-      const inX = p.x + p.w > now[i].x + 1 && p.x < now[i].x + m.w - 1;
+      // A couple of pixels of mercy: if it looks like a landing, it is one.
+      const inX = p.x + p.w > now[i].x - 2 && p.x < now[i].x + m.w + 2;
       if (!inX) continue;
       const glued = riding === i;
       const fell = prevBottom <= before[i].y + 2 && p.y + p.h >= now[i].y;
@@ -149,6 +151,12 @@ function updateMoversAndPlayer(g, world, input) {
         if (!p.onGround && !glued) emit(g, 'land');
         p.onGround = true;
         p.ride = i;
+        // Physics saw him in mid air this tick, so walking is counted here.
+        const walking = Math.abs(p.vx);
+        p.anim = (p.deckAnim ?? 0) + walking;
+        p.deckAnim = p.anim;
+        p.idle = walking === 0 && !input.left && !input.right ? (p.deckIdle ?? 0) + 1 : 0;
+        p.deckIdle = p.idle;
         break;
       }
     }
@@ -294,6 +302,8 @@ function updateChecks(g, world) {
     if (!g.checksOn.includes(i) && Math.abs(p.x - c.x) < 14 && Math.abs(p.y - c.y) < 40) {
       g.checksOn.push(i);
       g.check = { x: c.x, y: c.y };
+      // Committing your work is good for morale, and also charges the laptop.
+      g.battery = FULL_BATTERY;
       emit(g, 'checkpoint', { n: g.checksOn.length });
     }
   });

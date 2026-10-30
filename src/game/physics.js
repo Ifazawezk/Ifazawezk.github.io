@@ -32,7 +32,8 @@ export const PHYS = {
   STOMP_V: -3.6,
   BELT: 0.9,
   SPEED_PAD: 2.7,
-  BLINK_PERIOD: 200,
+  BLINK_PERIOD: 240,
+  BLINK_OVERLAP: 8,
 };
 
 export function tileAt(world, cx, cy) {
@@ -41,16 +42,18 @@ export function tileAt(world, cx, cy) {
   return world.tiles[cy * world.cols + cx];
 }
 
-// Blink platforms swap every half period, so A and B are never both there.
-export function blinkPhase(t) {
-  return Math.floor(t / (PHYS.BLINK_PERIOD / 2)) % 2;
+// Blink platforms take turns, but both exist for a moment at each swap. That
+// overlap is the difference between a tense jump and an unfair one.
+export function blinkSolid(type, t) {
+  const half = PHYS.BLINK_PERIOD / 2;
+  const u = (t + (type === T.BLINK_B ? half : 0)) % PHYS.BLINK_PERIOD;
+  return u < half + PHYS.BLINK_OVERLAP || u >= PHYS.BLINK_PERIOD - PHYS.BLINK_OVERLAP;
 }
 
 export function isSolidTile(type, t) {
   if (type === T.SOLID || type === T.BELT_L || type === T.BELT_R) return true;
   if (type === T.BOUNCE || type === T.SPEED) return true;
-  if (type === T.BLINK_A) return blinkPhase(t) === 0;
-  if (type === T.BLINK_B) return blinkPhase(t) === 1;
+  if (type === T.BLINK_A || type === T.BLINK_B) return blinkSolid(type, t);
   return false;
 }
 

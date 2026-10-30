@@ -43,6 +43,7 @@ export function updatePlayer(p, input, world, t, { boost = 1, airJumps = 0 } = {
     p.vy = PHYS.JUMP_V;
     p.buffer = 0;
     p.coyote = 0;
+    p.vx += p.rideDx || 0;
     out.jumped = true;
   } else if (p.buffer > 0 && !p.onGround && p.airJumps > 0) {
     p.vy = PHYS.JUMP_V * 0.9;
