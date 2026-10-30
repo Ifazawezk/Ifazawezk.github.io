@@ -11,43 +11,6 @@
 </head>
 <body>
 <canvas id="game" width="320" height="180"></canvas>
-<script type="module">
-  import { T, TILE } from './src/game/physics.js';
-  import { newPlayer, updatePlayer } from './src/game/player.js';
-
-  const rows = [...Array(9).fill(' '.repeat(40)), '#'.repeat(14) + '    ' + '#'.repeat(22), '#'.repeat(14) + '    ' + '#'.repeat(22)];
-  const cols = 40;
-  const tiles = new Uint8Array(cols * rows.length);
-  rows.forEach((r, y) => [...r].forEach((c, x) => { if (c === '#') tiles[y * cols + x] = T.SOLID; }));
-  const world = { cols, rows: rows.length, tiles };
-
-  const ctx = document.getElementById('game').getContext('2d');
-  const held = new Set();
-  addEventListener('keydown', (e) => held.add(e.code));
-  addEventListener('keyup', (e) => held.delete(e.code));
-  let p = newPlayer(24, 100);
-  let t = 0;
-
-  function frame() {
-    t++;
-    updatePlayer(p, {
-      left: held.has('ArrowLeft'),
-      right: held.has('ArrowRight'),
-      jump: held.has('Space') || held.has('ArrowUp'),
-    }, world, t);
-    if (p.y > 220) p = newPlayer(24, 100);
-    const camX = Math.max(0, Math.min(p.x - 150, cols * TILE - 320));
-    ctx.fillStyle = '#87b5c9';
-    ctx.fillRect(0, 0, 320, 180);
-    ctx.fillStyle = '#3c2b22';
-    for (let i = 0; i < tiles.length; i++) {
-      if (tiles[i]) ctx.fillRect(((i % cols) * TILE - camX) | 0, Math.floor(i / cols) * TILE, TILE, TILE);
-    }
-    ctx.fillStyle = '#f7b733';
-    ctx.fillRect((p.x - camX) | 0, p.y | 0, p.w, p.h);
-    requestAnimationFrame(frame);
-  }
-  frame();
-</script>
+<script type="module" src="src/main.js"></script>
 </body>
 </html>
