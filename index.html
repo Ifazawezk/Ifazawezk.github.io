@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Faza goes to Doha</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="shell">
+  <div id="stage">
+    <canvas id="game" width="320" height="180"></canvas>
+    <div id="overlay">
+      <div id="hud">
+        <div id="hud-cups"><span id="cup-icon" aria-hidden="true"></span><span id="cups">0</span></div>
+        <div id="hud-meter" aria-hidden="true"><i id="meter-fill"></i></div>
+        <div id="hud-battery" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div id="hud-score"><span data-t="ui.score">SCORE</span> <b id="score">0</b></div>
+        <div id="hud-best"><span data-t="ui.best">BEST</span> <b id="best">0</b></div>
+      </div>
+      <div id="bubble" hidden>
+        <div id="bubble-box"><span id="bubble-text"></span></div>
+        <div id="bubble-tail"></div>
+      </div>
+      <div id="floats" aria-hidden="true"></div>
+      <div id="banner" hidden><div id="banner-title"></div><div id="banner-sub"></div></div>
+    </div>
+  </div>
+  <div id="below">
+    <button id="lang" class="btn" type="button">عربي</button>
+    <a id="boring" class="btn" href="boring/">Boring version for recruiters</a>
+  </div>
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
