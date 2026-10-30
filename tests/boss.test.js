@@ -32,10 +32,15 @@ test('only the last level has The Deadline', () => {
   const s = createSession();
   const g = createGame();
   startRun(s, g);
-  assert.equal(g.boss, null);
-  loadLevel(s, g, s.worlds.length - 1);
-  assert.ok(g.boss);
-  assert.equal(g.boss.hp, 3);
+  s.worlds.forEach((world, index) => {
+    loadLevel(s, g, index);
+    if (index === s.worlds.length - 1) {
+      assert.ok(g.boss, world.id);
+      assert.equal(g.boss.hp, 3);
+    } else {
+      assert.equal(g.boss, null, `${world.id} has a boss in it`);
+    }
+  });
 });
 
 test('it wakes up when you walk in, and shouts about it', () => {

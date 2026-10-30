@@ -6,7 +6,11 @@
   "description": "A playable CV. Original pixel platformer in plain JavaScript and canvas.",
   "scripts": {
     "start": "node tools/serve.mjs",
-    "test": "node --test \"tests/*.test.js\""
+    "test": "node --test \"tests/*.test.js\"",
+    "bot": "node tools/bot.mjs",
+    "human": "node tools/human.mjs",
+    "browser": "node tools/browser.mjs",
+    "images": "node tools/make-images.mjs"
   },
   "devDependencies": {
     "playwright-core": "^1.64.1"

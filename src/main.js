@@ -153,6 +153,7 @@ function handleEvents() {
       ui.hideBanner();
       ui.fillEnding(game, session.totalCups, app.newBest);
       ui.showScreen('ending');
+      ui.els.shell.classList.remove('playing');
       sound.stopMusic();
     }
   }
@@ -228,14 +229,17 @@ document.addEventListener('visibilitychange', () => {
 let last = performance.now();
 let extra = 0;
 
-function draw() {
+function draw(snap = false) {
   const world = worldOf(session, game);
   if (game.phase === 'title' || game.phase === 'ending') {
     drawPostcard(renderer.ctx, {
-      t: performance.now() / (1000 / 60), ending: game.phase === 'ending', reduced: reducedMotion.matches,
+      t: performance.now() / (1000 / 60),
+      ending: game.phase === 'ending',
+      reduced: reducedMotion.matches,
+      fazaX: game.phase === 'ending' ? 34 : 96,
     });
   } else {
-    renderer.draw(game, world, { snap: game.levelT < 2 });
+    renderer.draw(game, world, { snap: snap || game.levelT < 2 });
   }
   ui.update(game, world, renderer);
 }
@@ -280,8 +284,9 @@ if (query.has('dev')) {
       for (const b of keys) {
         step(session, game, { left: !!(b & 1), right: !!(b & 2), jump: !!(b & 4), action: !!(b & 8) });
         handleEvents();
+        ui.update(game, worldOf(session, game), renderer);
       }
-      draw();
+      draw(true);
       return { phase: game.phase, level: game.level, x: game.p.x };
     },
     unfreeze() { app.frozen = false; last = performance.now(); },

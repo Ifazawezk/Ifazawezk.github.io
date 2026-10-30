@@ -8,7 +8,7 @@ export const cairo = {
   goalKind: 'roofdoor',
   signs: ['cairo.hello', 'cairo.sql', 'cairo.powerbi', 'cairo.auto', 'cairo.bye'],
   legend: {
-    D: { prop: 'dish' },
+    E: { prop: 'dish' },
     T: { prop: 'tank' },
     Q: { prop: 'bank' },
     L: { prop: 'laundry' },
@@ -38,7 +38,7 @@ export const cairo = {
       '                         ',
       '             o o o       ',
       '                         ',
-      ' @   0   D        T      ',
+      ' @   0   E        T      ',
       '##########################',
       '##########################',
       '##########################',

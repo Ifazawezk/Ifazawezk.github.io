@@ -42,7 +42,14 @@ export function moverPos(m, t) {
   return { x: m.x + m.dx * e, y: m.y + m.dy * e };
 }
 
+// Letters the parser keeps for itself. A legend may not reuse them: that is how
+// The Deadline once ended up on a rooftop in Cairo, disguised as a satellite dish.
+const RESERVED = new Set(['o', '@', '!', 'G', 'M', 'D', ...Object.keys(TILE_OF)]);
+
 export function parseLevel(def) {
+  for (const key of Object.keys(def.legend ?? {})) {
+    if (RESERVED.has(key)) throw new Error(`${def.id}: legend letter ${key} is reserved`);
+  }
   const rows = def.rows ?? stitch(def.chunks);
   const cols = Math.max(...rows.map((r) => r.length));
   const world = {

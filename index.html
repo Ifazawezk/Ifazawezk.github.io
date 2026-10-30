@@ -38,8 +38,10 @@
         <div id="bubble-box">
           <strong id="bubble-title" dir="ltr" hidden></strong>
           <span id="bubble-text"></span>
-          <span id="bubble-meta" dir="ltr" hidden></span>
-          <a id="bubble-link" class="stall-link" target="_blank" rel="noopener" hidden></a>
+          <span id="bubble-foot">
+            <a id="bubble-link" class="stall-link" target="_blank" rel="noopener" hidden></a>
+            <span id="bubble-meta" dir="ltr" hidden></span>
+          </span>
         </div>
         <div id="bubble-tail"></div>
       </div>
@@ -84,6 +86,7 @@
   </section>
 
   <section id="screen-ending" class="screen" data-dir hidden>
+    <div class="end-card">
     <h2 data-t="end.title">YOU REACHED DOHA</h2>
     <p class="home-line" data-t="end.home"></p>
     <p id="end-best" class="new-best" data-t="end.newBest" hidden>New best!</p>
@@ -97,6 +100,7 @@
     <div class="row">
       <button id="end-again" class="btn" type="button" data-t="end.again">Play again</button>
       <a id="end-boring" class="btn" href="boring/" data-t="ui.boring">Boring version for recruiters</a>
+    </div>
     </div>
   </section>
 

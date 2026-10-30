@@ -108,6 +108,7 @@ function tanta() {
   });
   return {
     sky: sky(['#7fc4e6', '#95d2ea', '#aadced', '#bfe6ef', '#d4eff0', '#e8f5e4']),
+    under: '#5f9e4a',
     sun: { x: 250, y: 24, r: 11, color: '#fff3b8', rim: '#ffe28a' },
     layers: [
       { img: clouds, speed: 0.06, y: 0 },
@@ -118,9 +119,10 @@ function tanta() {
 }
 
 const CHALK = [
-  'import pandas as pd', 'df = df.dropna()  # sorry', 'np.mean(tea)', 'y = mx + c',
-  'k = 3  # clusters', 'model.fit(X, y)', 'print("why")', 'for i in range(n):',
-  '# TODO: understand this', 'df.groupby("city")', 'x = x + 1', 'assert tea > 0',
+  ['import pandas as pd', 12, 14], ['df = df.dropna()  # sorry', 12, 34], ['# TODO: understand this', 150, 16],
+  ['np.mean(tea)', 170, 42], ['print("why")', 200, 70], ['y = mx + c', 40, 74],
+  ['k = 3  # clusters', 400, 14], ['model.fit(X, y)', 410, 110], ['df.groupby("city")', 490, 18],
+  ['for i in range(n):', 590 - 140, 130], ['x = x + 1', 60, 120], ['assert tea > 0', 230, 118],
 ];
 
 function alx() {
@@ -136,9 +138,7 @@ function alx() {
       const y = Math.floor(r() * h);
       for (let j = 0; j < 9; j++) rect(ctx, '#38584e', x + j * 3, y + Math.floor(r() * 7), 12, 1);
     }
-    CHALK.forEach((line, i) => {
-      const x = 14 + (i * 211) % (w - 150);
-      const y = 12 + (i * 37) % 92;
+    CHALK.forEach(([line, x, y], i) => {
       drawText(ctx, line, x, y, i % 3 === 0 ? '#f6e6a5' : '#cfe3d6', { scale: 1 });
     });
     // A hand-drawn scatter plot with three obvious clusters.
@@ -164,6 +164,7 @@ function alx() {
   });
   return {
     sky: sky(['#2c4a40']),
+    under: '#7a4e2c',
     layers: [
       { img: board, speed: 0.22, y: 0 },
       { img: paper, speed: 0.4, y: 0 },
@@ -223,6 +224,7 @@ function cairo() {
   });
   return {
     sky: sky(['#2f2460', '#4c2c74', '#7b3a7e', '#b24f79', '#e0746a', '#f4a35e', '#f8c76e']),
+    under: '#2c1940',
     sun: { x: 70, y: 104, r: 14, color: '#ffd97a', rim: '#f8a85a' },
     layers: [
       { img: far, speed: 0.1, y: 0 },
@@ -272,6 +274,7 @@ function hearts() {
   });
   return {
     sky: sky(['#101330']),
+    under: '#141735',
     layers: [
       { img: far, speed: 0.15, y: 0 },
       { img: near, speed: 0.34, y: 0 },
@@ -420,6 +423,7 @@ function dohaday() {
   });
   return {
     sky: sky(['#6fc0ea', '#86cdef', '#9dd8f2', '#b5e2f4', '#cdebf5', '#e3f3f4']),
+    under: '#e3cfae',
     sun: { x: 268, y: 26, r: 13, color: '#fffbe0', rim: '#fff0a8' },
     layers: [
       { img: far, speed: 0.1, y: -4 },
@@ -452,6 +456,7 @@ function corniche() {
   });
   return {
     sky: stars,
+    under: '#142a5e',
     moon: { x: 298, y: 26 },
     layers: [
       { img: far, speed: 0.12, y: -4 },
@@ -489,6 +494,8 @@ export function drawBackground(ctx, bg, camX, camY, t) {
     const y = (layer.y ?? 0) - Math.round(camY * 0.4);
     for (; x < 320; x += w) ctx.drawImage(layer.img, x, y);
   }
+  const lifted = Math.round(camY * 0.4);
+  if (lifted > 0 && bg.under) rect(ctx, bg.under, 0, 180 - lifted, 320, lifted);
   if (bg.leds) {
     // A few LEDs that actually blink, on top of the painted ones.
     const r = rng(Math.floor(t / 20));

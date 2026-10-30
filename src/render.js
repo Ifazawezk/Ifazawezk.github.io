@@ -302,7 +302,7 @@ export function createRenderer(canvas) {
     const u = 1 - g.growT / GROW_TICKS;
     ctx.fillStyle = '#1c1530';
     ctx.globalAlpha = 0.8;
-    ctx.fillRect(0, 44, VIEW_W, 96);
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     ctx.globalAlpha = 1;
     const swapEvery = Math.max(2, Math.round(16 - u * 20));
     const grown = u >= 0.62 || (u > 0.15 && Math.floor(g.t / swapEvery) % 2 === 0);
@@ -426,7 +426,7 @@ function firework(ctx, cx, cy, t, colors) {
 export function drawPostcard(ctx, opts) {
   const {
     t = 0, ending = false, reduced = false, camX = t * 0.25, floorY = 148,
-    faza = null, fazaX = 96, boss = !ending, dhow = true,
+    faza = null, fazaX = 96, boss = !ending, dhow = true, props = true,
   } = opts;
   bakeSprites();
   const art = themeArt('corniche');
@@ -450,10 +450,12 @@ export function drawPostcard(ctx, opts) {
     ctx.drawImage(art.tiles.fill[(n + 1) % 4], x, floorY + TILE * 2);
   }
 
-  const lamp = SPR.props.lamp[1];
-  ctx.drawImage(lamp, 22, floorY - lamp.height);
-  const palm = SPR.props.palm[1];
-  ctx.drawImage(palm, 236, floorY - palm.height);
+  if (props) {
+    const lamp = SPR.props.lamp[1];
+    ctx.drawImage(lamp, 22, floorY - lamp.height);
+    const palm = SPR.props.palm[1];
+    ctx.drawImage(palm, 236, floorY - palm.height);
+  }
 
   const name = faza ?? (ending ? (Math.floor(t / 20) % 2 ? 'cheer' : 'idle0') : (t % 240 < 120 ? 'sip1' : 'sip0'));
   const img = SPR.faza[opts.stage ?? LAST_STAGE][name][1];
