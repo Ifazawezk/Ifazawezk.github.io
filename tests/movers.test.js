@@ -136,7 +136,8 @@ for (const id of ['tanta', 'corniche']) {
 
 test('every pit crossed by a mover has a checkpoint close before it', () => {
   for (const { w, m } of allMovers(session())) {
-    if (m.dx === 0) continue;
+    // The metro runs over solid street: there is no pit to fall in.
+    if (m.dx === 0 || w.id === 'home') continue;
     const before = w.checkpoints.filter((c) => c.x <= m.x + TILE);
     const nearest = Math.max(w.spawn.x, ...before.map((c) => c.x));
     assert.ok(m.x - nearest <= 20 * TILE, `${w.id} ${m.kind}: ${m.x - nearest}px since the last checkpoint`);

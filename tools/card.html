@@ -1,0 +1,161 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Image bench</title>
+<canvas id="c"></canvas>
+<script type="module">
+import { bakeSprites, themeArt, drawPostcard } from '/src/render.js';
+import { paintDhow } from '/src/art/setpieces.js';
+import { drawText, textWidth } from '/src/art/font.js';
+import { STAGES } from '/src/art/faza.js';
+import { rect } from '/src/art/paint.js';
+
+// Everything drawn here is the real game art, posed for a picture.
+const SPR = bakeSprites();
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+function size(w, h) {
+  canvas.width = w;
+  canvas.height = h;
+  ctx.imageSmoothingEnabled = false;
+}
+
+const dataOf = () => ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+
+function base64(bytes) {
+  let out = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) out += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(out);
+}
+
+window.card = () => {
+  size(300, 158);
+  drawPostcard(ctx, { t: 300, camX: 60, floorY: 124, boss: false, dhow: false, props: false, faza: 'idle0', fazaX: -40 });
+  const y = 124;
+  const title = 'FAZA GOES HOME';
+  drawText(ctx, title, 150 - textWidth(title, 'big', 3) / 2, 12, '#f7b733', { scale: 3, shadow: '#b84a1f' });
+  const tag = 'A CV you can jump on.';
+  drawText(ctx, tag, 150 - textWidth(tag, 'big', 2) / 2, 42, '#fff7e6', { scale: 2, shadow: '#1c1530' });
+  const who = 'Mohanned Elhagar, data scientist, Doha';
+  drawText(ctx, who, 150 - textWidth(who, 'big', 1) / 2, 64, '#cfc8e6', { shadow: '#1c1530' });
+  // All six ages in a row, walking towards a very cross calendar.
+  STAGES.forEach((_, i) => {
+    const img = SPR.faza[i].run0[1];
+    ctx.drawImage(img, 22 + i * 30, y - img.height);
+  });
+  ctx.drawImage(SPR.deadline.shout[-1], 236, y - 44);
+  ctx.drawImage(SPR.cup[0], 208, y - 10);
+  return canvas.toDataURL('image/png');
+};
+
+window.favicon = (px) => {
+  size(16, 16);
+  rect(ctx, '#f7b733', 0, 0, 16, 16);
+  ctx.drawImage(SPR.faza[2].idle0[1], 0, 3);
+  const small = canvas.toDataURL('image/png');
+  const src = new Image();
+  return new Promise((resolve) => {
+    src.onload = () => {
+      size(px, px);
+      ctx.drawImage(src, 0, 0, px, px);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    src.src = small;
+  });
+};
+
+// ---- Profile animation ----------------------------------------------------
+// Faza runs along the Corniche at night and grows up as he goes, with The
+// Deadline on his heels. Every moving layer travels a whole number of its own
+// widths in one loop, so the last frame runs straight into the first.
+
+const W = 280;
+const H = 96;
+const FLOOR = 76;
+const LOOP_PX = 480;
+const STEP = 4;
+const FRAMES = LOOP_PX / STEP;
+const FAZA_X = 150;
+const CHASE_X = 36;
+const LINE = 'will debug for karak';
+
+const art = themeArt('corniche');
+const TILES = Array.from({ length: LOOP_PX / 16 }, (_, i) => (i * 7 + (i >> 2)) % 4);
+
+function wrap(value, width) {
+  return ((value % width) + width) % width;
+}
+
+function layer(img, offset, y) {
+  const w = img.width;
+  let x = -wrap(offset, w);
+  for (; x < W; x += w) ctx.drawImage(img, x, y);
+}
+
+window.gifFrame = (i) => {
+  size(W, H);
+  const scroll = i * STEP;
+  const sky = art.bg.sky;
+  ctx.drawImage(sky, 0, 0, W, H, 0, 0, W, H);
+  // The moon stays put: it is too far away to care.
+  rect(ctx, '#e8d6b0', 250, 10, 12, 12);
+  rect(ctx, '#fff3d6', 251, 11, 10, 10);
+  rect(ctx, '#141646', 255, 9, 9, 10);
+  const [far, near, sea] = art.bg.layers;
+  layer(far.img, scroll / 4, -74);
+  layer(near.img, scroll / 2, -70);
+  layer(sea.img, scroll / 2, -70);
+
+  // The dhow goes by once a loop, on the same seam as everything else.
+  const dhowX = 330 - wrap(scroll * 1, LOOP_PX);
+  paintDhow(ctx, dhowX, FLOOR - 42, 92);
+
+  for (let t = 0; t < TILES.length + 1; t++) {
+    const x = t * 16 - wrap(scroll, 16);
+    const n = TILES[(t + Math.floor(scroll / 16)) % TILES.length];
+    ctx.drawImage(art.tiles.top[n], x, FLOOR);
+    ctx.drawImage(art.tiles.fill[n], x, FLOOR + 16);
+  }
+  const lamp = SPR.props.lamp[1];
+  for (const at of [40, 280]) ctx.drawImage(lamp, wrap(at - scroll, LOOP_PX) - 40, FLOOR - lamp.height);
+  const palm = SPR.props.palm[1];
+  ctx.drawImage(palm, wrap(170 - scroll, LOOP_PX) - 40, FLOOR - palm.height);
+
+  // Six ages, an equal share of the loop each. The first frames of each age get
+  // a small burst, which also hides the jump back to childhood at the seam.
+  const share = FRAMES / STAGES.length;
+  const stage = Math.floor(i / share);
+  const into = i - stage * share;
+  const run = `run${Math.floor(i / 2) % 4}`;
+  const img = SPR.faza[stage][run][1];
+  ctx.drawImage(img, FAZA_X - Math.round(img.width / 2), FLOOR - img.height);
+  if (into < 4) {
+    const r = 6 + into * 4;
+    for (let a = 0; a < 8; a++) {
+      const angle = (a / 8) * Math.PI * 2;
+      const color = a % 2 ? '#f7b733' : '#fff7e6';
+      rect(ctx, color, Math.round(FAZA_X + Math.cos(angle) * r), Math.round(FLOOR - 10 + Math.sin(angle) * r), 2, 2);
+    }
+  }
+
+  // Cups on the way, one per age, each drunk as he reaches it.
+  const cup = SPR.cup[Math.floor(i / 6) % 2];
+  for (let c = 0; c < STAGES.length; c++) {
+    const worldX = 80 + c * 80;
+    const sx = wrap(worldX - scroll, LOOP_PX) - 40;
+    if (sx > FAZA_X + 2) ctx.drawImage(cup, sx, FLOOR - 26 + Math.round(Math.sin((i / 30) * Math.PI * 2 + c)));
+  }
+
+  // The Deadline, always exactly this far behind.
+  const stepping = Math.floor(i / 3) % 2 ? 'walk0' : 'walk1';
+  const shouting = i % 60 > 40;
+  ctx.drawImage(SPR.deadline[shouting ? 'shout' : stepping][1], CHASE_X - 12, FLOOR - 44);
+
+  drawText(ctx, 'FAZA', 86, 6, '#f7b733', { scale: 3, shadow: '#b84a1f' });
+  drawText(ctx, LINE, 86 + 80, 12, '#fff7e6', { shadow: '#1c1530' });
+  return base64(dataOf());
+};
+
+window.gifInfo = { W, H, FRAMES };
+document.title = 'ready';
+</script>

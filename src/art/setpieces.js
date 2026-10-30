@@ -1,6 +1,7 @@
 import { makeCanvas, rect } from './paint.js';
 import { drawText, textWidth } from './font.js';
 import { PAL } from './palette.js';
+import { QATAR_PIECES } from './qatar.js';
 
 const INK = PAL.k;
 
@@ -25,7 +26,71 @@ function column(ctx, x, top, bottom) {
   rect(ctx, '#c9b693', x + 4, top, 1, bottom - top);
 }
 
+// A small Qatari flag: white at the hoist, nine-point edge, maroon the rest.
+function qatarFlag(ctx, x, y) {
+  rect(ctx, INK, x - 1, y, 1, 26);
+  rect(ctx, '#fff7e6', x, y, 5, 12);
+  rect(ctx, '#7a2d3d', x + 5, y, 11, 12);
+  for (let i = 0; i < 6; i++) rect(ctx, '#fff7e6', x + 5, y + i * 2, 1 + (i % 2 ? 0 : 1), 1);
+}
+
+function school(label, wall, trim, plate) {
+  return () => piece(120, 68, (ctx) => {
+    outlined(ctx, 4, 18, 112, 50, wall);
+    rect(ctx, trim, 5, 19, 110, 3);
+    for (let x = 12; x < 108; x += 15) {
+      if (x > 46 && x < 74) continue;
+      for (let y = 28; y < 58; y += 15) {
+        rect(ctx, INK, x, y, 9, 10);
+        rect(ctx, '#7fc4e6', x + 1, y + 1, 7, 8);
+        rect(ctx, '#d8eef6', x + 1, y + 1, 2, 3);
+      }
+    }
+    outlined(ctx, 48, 40, 24, 28, '#6e4226');
+    rect(ctx, '#a86b3c', 50, 42, 9, 26);
+    rect(ctx, '#a86b3c', 61, 42, 9, 26);
+    rect(ctx, '#f7b733', 57, 54, 2, 2);
+    outlined(ctx, 14, 8, 92, 11, plate);
+    centredText(ctx, label, 60, 11, '#fff7e6', { font: 'tiny' });
+    qatarFlag(ctx, 106, 0);
+  });
+}
+
 const PIECES = {
+  villa: () => piece(96, 56, (ctx) => {
+    outlined(ctx, 8, 14, 80, 42, '#f2e6cf');
+    rect(ctx, '#cdb891', 9, 15, 78, 3);
+    for (let i = 8; i < 88; i += 8) rect(ctx, INK, i, 9, 5, 5);
+    for (let i = 9; i < 88; i += 8) rect(ctx, '#f2e6cf', i, 10, 3, 4);
+    outlined(ctx, 40, 30, 16, 26, '#b84a1f');
+    rect(ctx, '#f7b733', 52, 42, 2, 2);
+    for (const x of [18, 64]) {
+      rect(ctx, INK, x, 24, 14, 14);
+      rect(ctx, '#7fc4e6', x + 1, 25, 12, 12);
+      rect(ctx, '#d8eef6', x + 1, 25, 4, 4);
+      rect(ctx, INK, x + 6, 25, 1, 12);
+    }
+    centredText(ctx, 'HOME', 48, 20, '#7a2d3d', { font: 'tiny' });
+  }),
+
+  schoolA: school('AL RASHAD SCHOOL', '#f0dcb4', '#7a2d3d', '#7a2d3d'),
+  schoolB: school('IBN KHALDOUN SCHOOL', '#e6d3ad', '#2b8ea3', '#2a4d91'),
+  schoolC: school('ALI BIN JASSIM SCHOOL', '#ecd9c0', '#b84a1f', '#2f6b3a'),
+
+  airport: () => piece(96, 64, (ctx) => {
+    outlined(ctx, 0, 20, 96, 44, '#dcecf4');
+    for (let x = 4; x < 92; x += 9) {
+      rect(ctx, '#7fb2c9', x, 26, 7, 16);
+      rect(ctx, '#bfe6ef', x, 26, 2, 16);
+    }
+    rect(ctx, INK, 0, 44, 96, 1);
+    outlined(ctx, 32, 44, 32, 20, '#3a4a7a');
+    rect(ctx, '#7fb2c9', 34, 46, 13, 18);
+    rect(ctx, '#7fb2c9', 49, 46, 13, 18);
+    outlined(ctx, 8, 6, 80, 12, '#2a4d91');
+    centredText(ctx, 'DEPARTURES', 48, 9, '#fff7e6', { font: 'tiny' });
+  }),
+
   uni: () => piece(120, 72, (ctx, w, h) => {
     outlined(ctx, 6, 22, 108, 50, '#e6d3ad');
     for (let x = 12; x < 110; x += 16) {
@@ -194,6 +259,8 @@ const PIECES = {
   dhowBack: () => piece(120, 50, (ctx) => {
     paintDhow(ctx, 0, 0, 120);
   }),
+
+  ...QATAR_PIECES,
 };
 
 export function paintDhow(ctx, x, y, w) {
@@ -221,16 +288,31 @@ export function paintDhow(ctx, x, y, w) {
 
 const cache = new Map();
 
+// 'mia:night' is the same building after sunset, so the finale really does walk
+// back past the same places.
+function atNight(source) {
+  const c = makeCanvas(source.width, source.height);
+  const ctx = c.getContext('2d');
+  ctx.drawImage(source, 0, 0);
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.globalAlpha = 0.62;
+  ctx.fillStyle = '#141646';
+  ctx.fillRect(0, 0, c.width, c.height);
+  return c;
+}
+
 export function getPiece(kind) {
   if (!cache.has(kind)) {
-    if (!PIECES[kind]) throw new Error(`no set piece called ${kind}`);
-    cache.set(kind, PIECES[kind]());
+    const [name, time] = kind.split(':');
+    if (!PIECES[name]) throw new Error(`no set piece called ${name}`);
+    const made = PIECES[name]();
+    cache.set(kind, time === 'night' ? atNight(made) : made);
   }
   return cache.get(kind);
 }
 
 export function hasPiece(kind) {
-  return kind in PIECES;
+  return kind.split(':')[0] in PIECES;
 }
 
 const AWNINGS = [

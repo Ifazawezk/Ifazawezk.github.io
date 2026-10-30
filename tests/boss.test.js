@@ -5,11 +5,13 @@ import { BOSS_POINTS, bossSpeed } from '../src/game/boss.js';
 
 const none = { left: false, right: false, jump: false, action: false };
 
+const bossLevel = (s) => s.worlds.findIndex((w) => w.id === 'corniche');
+
 function atBoss() {
   const s = createSession();
   const g = createGame();
   startRun(s, g);
-  loadLevel(s, g, s.worlds.length - 1);
+  loadLevel(s, g, bossLevel(s));
   const b = g.boss;
   g.p.x = b.arena0 + 60;
   g.p.y = b.feet - g.p.h;
@@ -32,10 +34,15 @@ test('only the last level has The Deadline', () => {
   const s = createSession();
   const g = createGame();
   startRun(s, g);
-  assert.equal(g.boss, null);
-  loadLevel(s, g, s.worlds.length - 1);
-  assert.ok(g.boss);
-  assert.equal(g.boss.hp, 3);
+  s.worlds.forEach((world, index) => {
+    loadLevel(s, g, index);
+    if (world.id === 'corniche') {
+      assert.ok(g.boss, world.id);
+      assert.equal(g.boss.hp, 3);
+    } else {
+      assert.equal(g.boss, null, `${world.id} has a boss in it`);
+    }
+  });
 });
 
 test('it wakes up when you walk in, and shouts about it', () => {
@@ -99,7 +106,8 @@ test('the way out opens once it is beaten', () => {
   step(s, g, none);
   assert.equal(g.phase, 'clear');
   for (let i = 0; i < 80; i++) step(s, g, none);
-  assert.equal(g.phase, 'ending');
+  assert.equal(s.worlds[g.level].id, 'homecoming');
+  assert.equal(g.phase, 'play');
 });
 
 test('running into it hurts', () => {
@@ -149,7 +157,7 @@ test('skipping a level is possible, and counted', () => {
   const g = createGame();
   startRun(s, g);
   skipLevel(s, g);
-  for (let i = 0; i < 5; i++) step(s, g, none);
+  for (let i = 0; i < 300 && g.phase !== 'play'; i++) step(s, g, none);
   assert.equal(g.level, 1);
   assert.equal(g.skips, 1);
 });
@@ -158,6 +166,7 @@ test('skipping the last level goes straight to the ending', () => {
   const s = createSession();
   const g = createGame();
   startRun(s, g);
+  assert.equal(s.worlds.at(-1).id, 'homecoming');
   loadLevel(s, g, s.worlds.length - 1);
   skipLevel(s, g);
   for (let i = 0; i < 5; i++) step(s, g, none);

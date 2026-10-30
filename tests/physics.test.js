@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { T, TILE, PHYS, moveBody, tileAt, overlaps, blinkPhase, isSolidTile } from '../src/game/physics.js';
+import { T, TILE, PHYS, moveBody, tileAt, overlaps, isSolidTile } from '../src/game/physics.js';
 import { newPlayer, updatePlayer } from '../src/game/player.js';
 
 // Small test world from rows of text.
@@ -59,10 +59,21 @@ test('one-way platforms let you up but catch you coming down', () => {
   assert.equal(c.onGround, true);
 });
 
-test('blink platforms take turns', () => {
-  assert.notEqual(blinkPhase(0), blinkPhase(PHYS.BLINK_PERIOD / 2));
-  for (const t of [0, 50, 130, 170, 390]) {
-    assert.notEqual(isSolidTile(T.BLINK_A, t), isSolidTile(T.BLINK_B, t));
+test('blink platforms take turns, with a moment of overlap at each swap', () => {
+  const half = PHYS.BLINK_PERIOD / 2;
+  assert.equal(isSolidTile(T.BLINK_A, half / 2), true);
+  assert.equal(isSolidTile(T.BLINK_B, half / 2), false);
+  assert.equal(isSolidTile(T.BLINK_A, half + half / 2), false);
+  assert.equal(isSolidTile(T.BLINK_B, half + half / 2), true);
+  for (const swap of [half, PHYS.BLINK_PERIOD]) {
+    assert.equal(isSolidTile(T.BLINK_A, swap), true);
+    assert.equal(isSolidTile(T.BLINK_B, swap), true);
+  }
+});
+
+test('there is never a moment with no blink platform at all', () => {
+  for (let t = 0; t < PHYS.BLINK_PERIOD * 3; t++) {
+    assert.ok(isSolidTile(T.BLINK_A, t) || isSolidTile(T.BLINK_B, t), `tick ${t}`);
   }
 });
 

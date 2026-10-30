@@ -14,7 +14,7 @@
 
 import { fileURLToPath } from 'node:url';
 import { createSession, createGame, startRun, step, worldOf, loadLevel } from '../src/game/game.js';
-import { TILE } from '../src/game/physics.js';
+import { TILE, T } from '../src/game/physics.js';
 import { snapshotRepos } from './bot.mjs';
 
 export const LIMITS = {
@@ -165,8 +165,10 @@ export function playLikeAPerson(session, {
     const world = worldOf(session, g);
     const ranked = rankMoves(session, g);
     let chosen = ranked.find((entry) => holdsUp(session, g, entry.move));
-    // Two safe options, one of them standing still: people shuffle forward.
-    if (chosen && !chosen.move.dir) {
+    // Two safe options, one of them standing still: on firm ground, people
+    // shuffle forward. On a boat or a blinking tile they stay put and wait.
+    const firm = g.p.onGround && (g.p.ride ?? -1) < 0 && ![T.BLINK_A, T.BLINK_B].includes(g.p.groundTile);
+    if (firm && chosen && !chosen.move.dir) {
       const step = ranked.find((entry) => entry.move.dir > 0 && entry.move.kind === 'walk'
         && entry.best > chosen.best - TILE * 3 && holdsUp(session, g, entry.move));
       if (step) chosen = step;

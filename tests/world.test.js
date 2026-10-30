@@ -47,6 +47,12 @@ test('unknown map letters are caught early', () => {
   assert.throws(() => parseLevel({ ...def, rows: ['Z G', '###'] }), /unknown map letter/);
 });
 
+test('a legend cannot reuse a letter the parser keeps for itself', () => {
+  for (const letter of ['D', 'G', 'M', 'o']) {
+    assert.throws(() => parseLevel({ ...def, legend: { [letter]: { prop: 'palm' } } }), /reserved/);
+  }
+});
+
 test('a level without a goal is rejected', () => {
   assert.throws(() => parseLevel({ ...def, rows: ['   ', '###'] }), /no goal/);
 });

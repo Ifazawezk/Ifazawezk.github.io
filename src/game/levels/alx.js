@@ -3,6 +3,7 @@
 // the clustered cups, or stay low with the merge conflicts. Then go and teach.
 export const alx = {
   id: 'alx',
+  stage: 2,
   theme: 'alx',
   goalKind: 'door',
   signs: ['alx.hello', 'alx.pipe', 'alx.lift', 'alx.clusters', 'alx.gdsc'],

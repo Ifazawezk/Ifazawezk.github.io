@@ -81,6 +81,11 @@ const LEGS_DANGLE = [
 ];
 const shift = (rows) => ['................', ...rows.slice(0, -1)];
 
+export const FAZA_PARTS = {
+  HEAD, HEAD_BLINK, BODY, BODY_SWING, BODY_UP, BODY_SIP,
+  LEGS, LEGS_WIDE, LEGS_PASS, LEGS_WIDE_2, LEGS_TUCK, LEGS_DANGLE,
+};
+
 export const FAZA = {
   idle0: [...HEAD, ...BODY, ...LEGS],
   idle1: [...HEAD_BLINK, ...BODY, ...LEGS],
@@ -260,6 +265,79 @@ export const BUGS = {
       '.krrwrrkllwlllk.',
       '.krrrrrkllllllk.',
       '..kkkkkkkkkkkk..',
+    ],
+  ],
+  homework: [
+    [
+      '..kkkkkkkkkk',
+      '.kwwwwwwwwwk',
+      '.kwbbbbbbwwk',
+      '.kwkwwwkwwwk',
+      '.kwwwwwwwwwk',
+      '.kwbbbbwwwwk',
+      '.kwwkkkkwwwk',
+      '.kkkkkkkkkk.',
+      '..kk....kk..',
+    ],
+    [
+      '..kkkkkkkkkk',
+      '.kwwwwwwwwwk',
+      '.kwbbbbbbwwk',
+      '.kwkwwwkwwwk',
+      '.kwwwwwwwwwk',
+      '.kwbbbbwwwwk',
+      '.kwwkkkkwwwk',
+      '.kkkkkkkkkk.',
+      '...kk..kk...',
+    ],
+    [
+      '............',
+      '............',
+      '............',
+      '............',
+      '............',
+      '............',
+      '.kkkkkkkkkk.',
+      '.kwkwwwkwwwk',
+      '.kkkkkkkkkk.',
+    ],
+  ],
+  popquiz: [
+    [
+      '...kkkkkkk..',
+      '..kwwwwwwwk.',
+      '.kwwrrrrwwwk',
+      '.kwwrwwwwwwk',
+      '.kwwrrrwwwwk',
+      '.kwwrwwwwwwk',
+      '.kwwrwwwwwwk',
+      '.kwwwwwwwwwk',
+      '..kkkkkkkkk.',
+      '...k.....k..',
+    ],
+    [
+      '...kkkkkkk..',
+      '..kwwwwwwwk.',
+      '.kwwrrrrwwwk',
+      '.kwwrwwwwwwk',
+      '.kwwrrrwwwwk',
+      '.kwwrwwwwwwk',
+      '.kwwrwwwwwwk',
+      '.kwwwwwwwwwk',
+      '..kkkkkkkkk.',
+      '.....k.k....',
+    ],
+    [
+      '............',
+      '............',
+      '............',
+      '............',
+      '............',
+      '............',
+      '............',
+      '..kkkkkkkk..',
+      '.kwwrrrwwwwk',
+      '..kkkkkkkk..',
     ],
   ],
   ours: [

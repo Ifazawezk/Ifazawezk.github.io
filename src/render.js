@@ -1,8 +1,9 @@
-import { T, TILE, blinkPhase, PHYS } from './game/physics.js';
+import { T, TILE, isSolidTile } from './game/physics.js';
 import { moverPos } from './game/world.js';
-import { VIEW_W, VIEW_H } from './game/game.js';
+import { VIEW_W, VIEW_H, GROW_TICKS } from './game/game.js';
 import { makeCanvas, rect } from './art/paint.js';
-import { FAZA, CUP, BUGS, DEADLINE, INVITE, NPCS, PROPS } from './art/sprites.js';
+import { CUP, BUGS, DEADLINE, INVITE, NPCS, PROPS } from './art/sprites.js';
+import { STAGES, LAST_STAGE } from './art/faza.js';
 import { bakeAll, bake, bakePair } from './art/bake.js';
 import { buildTiles } from './art/tiles.js';
 import { buildBackground, drawBackground } from './art/backgrounds.js';
@@ -15,12 +16,16 @@ let SPR = null;
 export function bakeSprites() {
   if (SPR) return SPR;
   SPR = {
-    faza: bakeAll(FAZA),
+    faza: STAGES.map((stage) => bakeAll(stage.frames)),
     cup: CUP.map((rows) => bake(rows)),
     bugs: Object.fromEntries(Object.entries(BUGS).map(([k, frames]) => [k, frames.map(bakePair)])),
     deadline: bakeAll(DEADLINE),
     invite: bake(INVITE),
-    npcs: Object.fromEntries(Object.entries(NPCS).map(([k, frames]) => [k, frames.map(bakePair)])),
+    npcs: Object.fromEntries(Object.entries({
+      ...NPCS,
+      // A small kid with a very large bag. It is not him. It is just a kid.
+      kid: [STAGES[0].frames.run0, STAGES[0].frames.run2],
+    }).map(([k, frames]) => [k, frames.map(bakePair)])),
     props: bakeAll(PROPS),
   };
   return SPR;
@@ -39,7 +44,8 @@ function hash(x, y) {
 
 // Static tiles go on one big sheet so a frame only needs a single draw call.
 export function bakeWorld(world) {
-  const { tiles } = themeArt(world.theme);
+  const { tiles: street } = themeArt(world.theme);
+  const { tiles: desert } = themeArt('dunes');
   const sheet = makeCanvas(world.cols * TILE, world.rows * TILE);
   const ctx = sheet.getContext('2d');
   const animated = [];
@@ -52,6 +58,7 @@ export function bakeWorld(world) {
       if (type === T.AIR) continue;
       const px = x * TILE;
       const py = y * TILE;
+      const tiles = x >= world.sand.from && x < world.sand.to ? desert : street;
       if (type === T.SOLID) {
         const above = at(x, y - 1);
         const set = above === T.SOLID ? tiles.fill : tiles.top;
@@ -107,6 +114,7 @@ export function createRenderer(canvas) {
     if (e.type === 'hurt' || e.type === 'die') { burst(p.x + 5, p.y + 8, ['#e0403f', '#fff7e6'], 10, 1.6); state.shake = 6; }
     if (e.type === 'boss-hit') { burst(e.x, e.y, ['#e0403f', '#fff7e6', '#f7b733'], 16, 2.2); state.shake = 10; }
     if (e.type === 'checkpoint') burst(p.x + 5, p.y, ['#8fd14f', '#fff7e6'], 8, 1.1);
+    if (e.type === 'grow-here') burst(e.x, e.y, ['#f7b733', '#fff7e6', '#58d3e0'], 18, 1.8);
   }
 
   function ensureWorld(world) {
@@ -145,8 +153,6 @@ export function createRenderer(canvas) {
     ctx.drawImage(state.baked.sheet, cx, cy, VIEW_W, VIEW_H, 0, 0, VIEW_W, VIEW_H);
     const frame4 = Math.floor(g.t / 10) % 4;
     const belt = Math.floor(g.t / 5) % 4;
-    const phase = blinkPhase(g.t);
-    const warn = PHYS.BLINK_PERIOD / 2 - (g.t % (PHYS.BLINK_PERIOD / 2)) < 40;
     for (const a of state.baked.animated) {
       const sx = a.x - cx;
       if (sx < -TILE || sx > VIEW_W) continue;
@@ -164,8 +170,9 @@ export function createRenderer(canvas) {
         ctx.drawImage(art.tiles.speed[frame4], sx, sy);
       } else if (a.type === T.BLINK_A || a.type === T.BLINK_B) {
         const set = a.type === T.BLINK_A ? art.tiles.blinkA : art.tiles.blinkB;
-        const live = (a.type === T.BLINK_A ? 0 : 1) === phase;
-        const flicker = live && warn && Math.floor(g.t / 4) % 2 === 0;
+        const live = isSolidTile(a.type, g.t);
+        // Flicker for the last 40 ticks, so a vanishing tile warns you first.
+        const flicker = live && !isSolidTile(a.type, g.t + 40) && Math.floor(g.t / 4) % 2 === 0;
         ctx.drawImage(live && !flicker ? set.on : set.off, sx, sy);
       }
     }
@@ -207,6 +214,17 @@ export function createRenderer(canvas) {
       rect(ctx, '#3f7fd1', x + 1, y + 1, m.w - 2, 12);
       for (let i = x + 4; i < x + m.w - 2; i += 5) rect(ctx, '#2a4d91', i, y + 2, 2, 10);
       rect(ctx, '#58d3e0', x + 1, y + 1, m.w - 2, 1);
+    } else if (m.kind === 'metro') {
+      rect(ctx, ink, x, y, m.w, 26);
+      rect(ctx, '#e6ecf0', x + 1, y + 1, m.w - 2, 24);
+      rect(ctx, '#fff7e6', x + 1, y + 1, m.w - 2, 2);
+      rect(ctx, '#7a2d3d', x + 1, y + 19, m.w - 2, 3);
+      for (let i = x + 6; i < x + m.w - 10; i += 14) {
+        rect(ctx, ink, i, y + 6, 10, 10);
+        rect(ctx, '#7fc4e6', i + 1, y + 7, 8, 8);
+      }
+      rect(ctx, ink, x + m.w - 8, y + 6, 6, 10);
+      rect(ctx, '#bfe6ef', x + m.w - 7, y + 7, 4, 8);
     } else if (m.kind === 'dhow') {
       paintDhow(ctx, x, y - 34, m.w);
     } else {
@@ -215,12 +233,12 @@ export function createRenderer(canvas) {
     }
   }
 
-  function drawGoal(world, g, cx, cy) {
+  function drawGoal(world, g, cx, cy, lit = true) {
     const goal = world.goal;
     const kind = world.goalKind;
-    if (!kind) return;
+    if (!kind || !lit) return;
     const img = getPiece(kind);
-    ctx.drawImage(img, goal.x - 8 - cx, goal.feet - img.height - cy);
+    ctx.drawImage(img, goal.x + world.goalDx - cx, goal.feet - img.height - cy);
   }
 
   function drawSigns(world, g, cx, cy) {
@@ -296,15 +314,35 @@ export function createRenderer(canvas) {
     for (const inv of g.invites ?? []) ctx.drawImage(SPR.invite, Math.round(inv.x - cx), Math.round(inv.y - cy));
   }
 
+  // Old Faza and new Faza flicker back and forth, faster and faster, then pop.
+  function drawGrowth(g) {
+    const u = 1 - g.growT / GROW_TICKS;
+    ctx.fillStyle = '#1c1530';
+    ctx.globalAlpha = 0.8;
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    ctx.globalAlpha = 1;
+    const swapEvery = Math.max(2, Math.round(16 - u * 20));
+    const grown = u >= 0.62 || (u > 0.15 && Math.floor(g.t / swapEvery) % 2 === 0);
+    const stage = grown ? g.growTo : g.growFrom;
+    const img = SPR.faza[stage][u >= 0.62 && Math.floor(g.t / 10) % 2 ? 'cheer' : 'idle0'][1];
+    const w = img.width * 3;
+    const h = img.height * 3;
+    ctx.drawImage(img, Math.round(VIEW_W / 2 - w / 2), 136 - h, w, h);
+    if (u >= 0.62 && u < 0.67 && !state.reduced) {
+      ctx.fillStyle = '#fff7e6';
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    }
+  }
+
   function drawPlayer(g, cx, cy) {
     const p = g.p;
     if (p.inv > 0 && g.t % 6 < 3) return;
-    if (g.phase === 'ending') return;
+    if (g.phase === 'ending' || g.phase === 'grow') return;
     const name = g.deadT > 0 ? 'hurt' : g.phase === 'clear' ? 'cheer' : fazaFrame(p, g.t);
-    const img = SPR.faza[name][p.dir];
+    const img = SPR.faza[g.stage ?? 2][name][p.dir];
     const jitter = g.hyperT > 0 && !state.reduced ? (g.t % 2) * 2 - 1 : 0;
-    const x = Math.round(p.x - 3 - cx) + jitter;
-    const y = Math.round(p.y + p.h - 18 - cy);
+    const x = Math.round(p.x + p.w / 2 - img.width / 2 - cx) + jitter;
+    const y = Math.round(p.y + p.h - img.height - cy);
     ctx.drawImage(img, x, y);
     if (g.hyperT > 0 && g.t % 3 === 0) rect(ctx, '#f7b733', x + 3 + (g.t % 10), y + (g.t % 16), 1, 1);
   }
@@ -340,12 +378,20 @@ export function createRenderer(canvas) {
 
     drawBackground(ctx, art.bg, cx, cy, g.t);
     for (const p of world.props) drawProp(p, cx, cy, g.t, false);
-    drawGoal(world, g, cx, cy);
+    if (!art.bg.tint) drawGoal(world, g, cx, cy);
     for (const stall of world.stalls) {
       const x = stall.x - cx;
       if (x > -STALL_MARGIN && x < VIEW_W + 4) ctx.drawImage(state.stalls.get(stall), x, stall.feet - 72 - cy);
     }
     drawTiles(world, g, art, cx, cy);
+    // Night falls on the buildings, not on the people.
+    if (art.bg.tint) {
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = art.bg.tint;
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      ctx.globalAlpha = 1;
+    }
+    drawGoal(world, g, cx, cy, true);
     drawSigns(world, g, cx, cy);
     for (const m of world.movers) drawMover(world, m, g, cx, cy);
     drawCups(g, cx, cy);
@@ -354,6 +400,7 @@ export function createRenderer(canvas) {
     drawPlayer(g, cx, cy);
     for (const p of world.props) drawProp(p, cx, cy, g.t, true);
     drawParticles(cx, cy);
+    if (g.phase === 'grow') drawGrowth(g);
     state.lastCx = cx;
     state.lastCy = cy;
   }
@@ -404,7 +451,7 @@ function firework(ctx, cx, cy, t, colors) {
 export function drawPostcard(ctx, opts) {
   const {
     t = 0, ending = false, reduced = false, camX = t * 0.25, floorY = 148,
-    faza = null, fazaX = 96, boss = !ending, dhow = true,
+    faza = null, fazaX = 96, boss = !ending, dhow = true, props = true,
   } = opts;
   bakeSprites();
   const art = themeArt('corniche');
@@ -428,13 +475,16 @@ export function drawPostcard(ctx, opts) {
     ctx.drawImage(art.tiles.fill[(n + 1) % 4], x, floorY + TILE * 2);
   }
 
-  const lamp = SPR.props.lamp[1];
-  ctx.drawImage(lamp, 22, floorY - lamp.height);
-  const palm = SPR.props.palm[1];
-  ctx.drawImage(palm, 236, floorY - palm.height);
+  if (props) {
+    const lamp = SPR.props.lamp[1];
+    ctx.drawImage(lamp, 22, floorY - lamp.height);
+    const palm = SPR.props.palm[1];
+    ctx.drawImage(palm, 236, floorY - palm.height);
+  }
 
   const name = faza ?? (ending ? (Math.floor(t / 20) % 2 ? 'cheer' : 'idle0') : (t % 240 < 120 ? 'sip1' : 'sip0'));
-  const img = SPR.faza[name][1];
+  if (ending) ctx.drawImage(getPiece('villaLit'), -8, floorY - 56);
+  const img = SPR.faza[opts.stage ?? LAST_STAGE][name][1];
   ctx.drawImage(img, Math.round(fazaX), floorY - img.height);
   const cupFrame = Math.floor(t / 16) % 2;
   ctx.drawImage(SPR.cup[cupFrame], Math.round(fazaX) + 26, floorY - 10);

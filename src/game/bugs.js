@@ -2,6 +2,8 @@ import { PHYS, TILE, tileAt, isSolidTile, moveBody, T } from './physics.js';
 
 // Each bug's behaviour is a small joke about what the bug is.
 export const BUG_TYPES = {
+  homework: { w: 12, h: 9, speed: 0.3, ai: 'walk' },
+  popquiz: { w: 12, h: 10, speed: 0.45, ai: 'walk' },
   nullptr: { w: 12, h: 11, speed: 0.45, ai: 'walk' },
   offbyone: { w: 12, h: 10, speed: 0, ai: 'hop' },
   merge: { w: 14, h: 11, speed: 0.4, ai: 'walk', split: ['ours', 'theirs'] },

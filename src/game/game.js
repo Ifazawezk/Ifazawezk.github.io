@@ -17,6 +17,8 @@ export const CUP_POINTS = 10;
 export const CAFFEINE_FULL = 12;
 export const FULL_BATTERY = 3;
 const HYPER_TICKS = 420;
+export const GROW_TICKS = 130;
+const GROW_SKIPPABLE_AFTER = 40;
 
 // The world never changes during a run, so it lives outside the game state.
 // That keeps the state a small plain object, cheap to copy for the test bot.
@@ -53,6 +55,11 @@ export function createGame() {
     battery: FULL_BATTERY,
     bugs: [],
     stomped: 0,
+    stage: 0,
+    growT: 0,
+    growFrom: 0,
+    growTo: 0,
+    growHeld: false,
     boss: null,
     invites: [],
     stall: -1,
@@ -84,6 +91,7 @@ export function loadLevel(s, g, index) {
   g.level = index;
   g.levelT = 0;
   const world = s.worlds[index];
+  g.stage = world.stage;
   g.p = newPlayer(world.spawn.x, world.spawn.y);
   g.check = { x: world.spawn.x, y: world.spawn.y };
   g.checksOn = [];
@@ -237,6 +245,15 @@ function updateBugs(g, world, input) {
   if (g.bugs.length > 0 && g.t % 60 === 0) g.bugs = g.bugs.filter((b) => b.dead < 40);
 }
 
+function updateGrowth(g, world) {
+  for (const spot of world.grows) {
+    if (g.stage < spot.stage && g.p.x >= spot.x) {
+      g.stage = spot.stage;
+      emit(g, 'grow-here', { to: spot.stage, x: g.p.x + 5, y: g.p.y });
+    }
+  }
+}
+
 function updateStalls(g, world, input) {
   const p = g.p;
   const cx = p.x + p.w / 2;
@@ -332,6 +349,7 @@ function playTick(s, g, input) {
 
   if (g.hyperT > 0) g.hyperT--;
   updateCups(g);
+  updateGrowth(g, world);
   updateChecks(g, world);
   updateStalls(g, world, input);
   if (g.stall < 0 || g.bubble?.boss) updateSigns(g, world);
@@ -361,14 +379,32 @@ export function step(s, g, input) {
   else if (g.phase === 'clear') {
     g.clearT--;
     g.levelT++;
-    if (g.clearT <= 0) {
-      if (g.level + 1 < s.worlds.length) {
-        g.phase = 'play';
-        loadLevel(s, g, g.level + 1);
-      } else {
-        g.phase = 'ending';
-        emit(g, 'ending');
-      }
+    if (g.clearT <= 0) nextStop(s, g);
+  } else if (g.phase === 'grow') {
+    g.growT--;
+    const pressed = input.jump && !g.growHeld;
+    g.growHeld = !!input.jump;
+    if (g.growT <= 0 || (pressed && GROW_TICKS - g.growT > GROW_SKIPPABLE_AFTER)) {
+      g.phase = 'play';
+      loadLevel(s, g, g.level + 1);
     }
+  }
+}
+
+function nextStop(s, g) {
+  const next = s.worlds[g.level + 1];
+  if (!next) {
+    g.phase = 'ending';
+    emit(g, 'ending');
+  } else if (next.stage !== g.stage) {
+    g.phase = 'grow';
+    g.growT = GROW_TICKS;
+    g.growFrom = g.stage;
+    g.growTo = next.stage;
+    g.growHeld = true;
+    emit(g, 'grow', { to: next.stage });
+  } else {
+    g.phase = 'play';
+    loadLevel(s, g, g.level + 1);
   }
 }

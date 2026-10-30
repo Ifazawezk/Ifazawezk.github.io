@@ -33,4 +33,6 @@ export const PAL = {
   m: '#caa2f0', // lilac
   v: '#6a4bb0', // violet
   e: '#7a2d3d', // maroon, for the Qatar flag on the dhow
+  i: '#cfe2f5', // office shirt
+  I: '#9db8d8', // office shirt shade
 };

@@ -42,13 +42,24 @@ export function moverPos(m, t) {
   return { x: m.x + m.dx * e, y: m.y + m.dy * e };
 }
 
+// Letters the parser keeps for itself. A legend may not reuse them: that is how
+// The Deadline once ended up on a rooftop in Cairo, disguised as a satellite dish.
+const RESERVED = new Set(['o', '@', '!', 'G', 'M', 'D', ...Object.keys(TILE_OF)]);
+
 export function parseLevel(def) {
+  for (const key of Object.keys(def.legend ?? {})) {
+    if (RESERVED.has(key)) throw new Error(`${def.id}: legend letter ${key} is reserved`);
+  }
   const rows = def.rows ?? stitch(def.chunks);
   const cols = Math.max(...rows.map((r) => r.length));
   const world = {
     id: def.id,
     theme: def.theme,
     goalKind: def.goalKind ?? null,
+    goalDx: def.goalDx ?? -8,
+    sand: { from: Infinity, to: Infinity },
+    stage: def.stage ?? 2,
+    grows: [],
     cols,
     rows: rows.length,
     tiles: new Uint8Array(cols * rows.length),
@@ -100,7 +111,11 @@ export function parseLevel(def) {
       } else {
         const entry = def.legend?.[c];
         if (!entry) throw new Error(`${def.id}: unknown map letter ${c} at ${x},${y}`);
-        if (entry.bug) world.bugs.push({ type: entry.bug, x: px, feet, ...entry.opts });
+        if (entry.sign) world.signs.push({ x: px, y: feet - 14, feet, key: entry.sign });
+        else if (entry.sandFrom) world.sand.from = x;
+        else if (entry.sandTo) world.sand.to = x;
+        else if (entry.grow !== undefined) world.grows.push({ x: px, stage: entry.grow });
+        else if (entry.bug) world.bugs.push({ type: entry.bug, x: px, feet, ...entry.opts });
         else if (entry.npc) world.npcs.push({ kind: entry.npc, x: px, feet, key: entry.say, flip: !!entry.flip });
         else if (entry.prop) world.props.push({ kind: entry.prop, x: px, feet, front: !!entry.front });
       }

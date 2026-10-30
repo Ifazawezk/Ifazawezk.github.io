@@ -72,26 +72,24 @@ export function textWidth(text, font = 'big', scale = 1) {
 }
 
 export function drawText(ctx, text, x, y, color, { font = 'big', scale = 1, shadow = null } = {}) {
-  let penX = Math.round(x);
-  const penY = Math.round(y);
-  for (const ch of String(text)) {
-    const g = glyph(font, ch);
-    if (g.rows) {
-      for (let row = 0; row < g.rows.length; row++) {
-        for (let col = 0; col < g.width; col++) {
-          if (g.rows[row] & (1 << (g.bits - 1 - col - g.first))) {
-            const px = penX + col * scale;
-            const py = penY + row * scale;
-            if (shadow) {
-              ctx.fillStyle = shadow;
-              ctx.fillRect(px + scale, py + scale, scale, scale);
+  const paint = (fill, offset) => {
+    let penX = Math.round(x);
+    const penY = Math.round(y);
+    ctx.fillStyle = fill;
+    for (const ch of String(text)) {
+      const g = glyph(font, ch);
+      if (g.rows) {
+        for (let row = 0; row < g.rows.length; row++) {
+          for (let col = 0; col < g.width; col++) {
+            if (g.rows[row] & (1 << (g.bits - 1 - col - g.first))) {
+              ctx.fillRect(penX + col * scale + offset, penY + row * scale + offset, scale, scale);
             }
-            ctx.fillStyle = color;
-            ctx.fillRect(px, py, scale, scale);
           }
         }
       }
+      penX += (g.width + 1) * scale;
     }
-    penX += (g.width + 1) * scale;
-  }
+  };
+  if (shadow) paint(shadow, scale);
+  paint(color, 0);
 }

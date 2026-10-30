@@ -2,14 +2,26 @@
 <html lang="en" data-lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Faza goes to Doha</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Faza Goes Home: the playable CV of Mohanned Elhagar</title>
+<meta name="description" content="A pixel-art platformer that is also a CV. Play as Faza, data scientist and Python backend developer, from school in Doha to Egypt and back home. Prefer plain text? There is a boring version.">
+<link rel="canonical" href="https://ifazawezk.github.io/">
+<link rel="icon" href="assets/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/favicon-180.png">
+<meta name="theme-color" content="#17132b">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Faza Goes Home: a CV you can jump on">
+<meta property="og:description" content="The career of Mohanned Elhagar as a platformer. Stomp bugs, drink karak, defeat The Deadline.">
+<meta property="og:url" content="https://ifazawezk.github.io/">
+<meta property="og:image" content="https://ifazawezk.github.io/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="fonts/pixelify-sans-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="shell">
-  <div id="stage">
-    <canvas id="game" width="320" height="180"></canvas>
+  <div id="stage" dir="ltr">
+    <canvas id="game" width="320" height="180" role="img" aria-label="Faza Goes Home, a side-scrolling platformer. The boring version has all the same facts as plain text."></canvas>
     <div id="overlay">
       <div id="hud">
         <div id="hud-cups"><span id="cup-icon" aria-hidden="true"></span><span id="cups">0</span></div>
@@ -17,20 +29,86 @@
         <div id="hud-battery" aria-hidden="true"><i></i><i></i><i></i></div>
         <div id="hud-score"><span data-t="ui.score">SCORE</span> <b id="score">0</b></div>
         <div id="hud-best"><span data-t="ui.best">BEST</span> <b id="best">0</b></div>
+        <button id="btn-mute" class="mini" type="button" aria-pressed="false" aria-label="Sound on">
+          <svg viewBox="0 0 9 7" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M0 2h2v3H0zM2 1h1v5H2zM3 0h1v7H3z"/><path class="waves" d="M5 2h1v3H5zM7 1h1v5H7z"/></svg>
+        </button>
+        <button id="btn-pause" class="mini" type="button" data-t-aria="ui.pause" aria-label="Pause"><span aria-hidden="true">II</span></button>
       </div>
-      <div id="bubble" hidden>
-        <div id="bubble-box"><span id="bubble-text"></span></div>
+      <div id="bubble" data-dir hidden>
+        <div id="bubble-box">
+          <strong id="bubble-title" dir="ltr" hidden></strong>
+          <span id="bubble-text"></span>
+          <span id="bubble-foot">
+            <a id="bubble-link" class="stall-link" target="_blank" rel="noopener" hidden></a>
+            <span id="bubble-meta" dir="ltr" hidden></span>
+          </span>
+        </div>
         <div id="bubble-tail"></div>
       </div>
       <div id="floats" aria-hidden="true"></div>
-      <div id="banner" hidden><div id="banner-title"></div><div id="banner-sub"></div></div>
+      <div id="grow-card" data-dir hidden><div id="grow-title"></div><div id="grow-sub"></div></div>
+      <div id="banner" data-dir hidden><div id="banner-title"></div><div id="banner-sub"></div></div>
     </div>
   </div>
+
+  <div id="dock"></div>
+
+  <div id="pad" dir="ltr">
+    <div id="dpad" role="group" data-t-aria="ui.move" aria-label="Move">
+      <span class="arrow left" aria-hidden="true"></span>
+      <span class="arrow right" aria-hidden="true"></span>
+    </div>
+    <a id="btn-action" class="pad-action" target="_blank" rel="noopener" data-t="ui.open" hidden>Open repo</a>
+    <button id="btn-jump" type="button" data-t="ui.jump">Jump</button>
+  </div>
+
   <div id="below">
     <button id="lang" class="btn" type="button">عربي</button>
-    <a id="boring" class="btn" href="boring/">Boring version for recruiters</a>
+    <a id="boring" class="btn boring" href="boring/" data-t="ui.boring">Boring version for recruiters</a>
+    <p id="hint"></p>
   </div>
+
+  <section id="screen-title" class="screen" data-dir hidden>
+    <h1 data-t="ui.title">FAZA GOES HOME</h1>
+    <p class="tagline" data-t="ui.tagline">A CV you can jump on.</p>
+    <p class="start" id="title-start">Press any key to start</p>
+    <p class="by" data-t="ui.by">Mohanned Elhagar, also known as Faza, also known as Dad</p>
+  </section>
+
+  <section id="screen-pause" class="screen" data-dir hidden>
+    <h2 data-t="ui.paused">PAUSED</h2>
+    <p data-t="ui.pausedLine"></p>
+    <div class="row">
+      <button id="pause-resume" class="btn big" type="button" data-t="ui.resume">Back to work</button>
+      <button id="pause-skip" class="btn" type="button" data-t="ui.skip">Skip this level (agile)</button>
+      <a id="pause-boring" class="btn" href="boring/" data-t="ui.boring">Boring version for recruiters</a>
+    </div>
+  </section>
+
+  <section id="screen-ending" class="screen" dir="ltr" hidden>
+    <div class="end-card" data-dir>
+    <h2 data-t="end.title">YOU REACHED DOHA</h2>
+    <p class="home-line" data-t="end.home"></p>
+    <p id="end-best" class="new-best" data-t="end.newBest" hidden>New best!</p>
+    <dl id="end-rows"></dl>
+    <p id="end-joke"></p>
+    <p class="cta" data-t="end.cta"></p>
+    <div class="row">
+      <a id="end-linkedin" class="btn big" rel="noopener" target="_blank" href="https://www.linkedin.com/in/mohanned-alhagar-b298b8272" data-t="end.linkedin">LinkedIn</a>
+      <a id="end-github" class="btn big" rel="noopener" target="_blank" href="https://github.com/Ifazawezk" data-t="end.github">GitHub</a>
+    </div>
+    <div class="row">
+      <button id="end-again" class="btn" type="button" data-t="end.again">Play again</button>
+      <a id="end-boring" class="btn" href="boring/" data-t="ui.boring">Boring version for recruiters</a>
+    </div>
+    </div>
+  </section>
+
+  <div id="live" class="sr" aria-live="polite"></div>
 </div>
+<noscript>
+  <p class="nojs">This is a game, so it needs JavaScript. <a href="boring/">The boring version</a> does not, and it has all the same facts about Mohanned Elhagar, data scientist and Python backend developer in Doha, Qatar.</p>
+</noscript>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>

@@ -108,6 +108,7 @@ function tanta() {
   });
   return {
     sky: sky(['#7fc4e6', '#95d2ea', '#aadced', '#bfe6ef', '#d4eff0', '#e8f5e4']),
+    under: '#5f9e4a',
     sun: { x: 250, y: 24, r: 11, color: '#fff3b8', rim: '#ffe28a' },
     layers: [
       { img: clouds, speed: 0.06, y: 0 },
@@ -118,9 +119,10 @@ function tanta() {
 }
 
 const CHALK = [
-  'import pandas as pd', 'df = df.dropna()  # sorry', 'np.mean(tea)', 'y = mx + c',
-  'k = 3  # clusters', 'model.fit(X, y)', 'print("why")', 'for i in range(n):',
-  '# TODO: understand this', 'df.groupby("city")', 'x = x + 1', 'assert tea > 0',
+  ['import pandas as pd', 12, 14], ['df = df.dropna()  # sorry', 12, 34], ['# TODO: understand this', 150, 16],
+  ['np.mean(tea)', 170, 42], ['print("why")', 200, 70], ['y = mx + c', 40, 74],
+  ['k = 3  # clusters', 400, 14], ['model.fit(X, y)', 410, 110], ['df.groupby("city")', 490, 18],
+  ['for i in range(n):', 590 - 140, 130], ['x = x + 1', 60, 120], ['assert tea > 0', 230, 118],
 ];
 
 function alx() {
@@ -136,9 +138,7 @@ function alx() {
       const y = Math.floor(r() * h);
       for (let j = 0; j < 9; j++) rect(ctx, '#38584e', x + j * 3, y + Math.floor(r() * 7), 12, 1);
     }
-    CHALK.forEach((line, i) => {
-      const x = 14 + (i * 211) % (w - 150);
-      const y = 12 + (i * 37) % 92;
+    CHALK.forEach(([line, x, y], i) => {
       drawText(ctx, line, x, y, i % 3 === 0 ? '#f6e6a5' : '#cfe3d6', { scale: 1 });
     });
     // A hand-drawn scatter plot with three obvious clusters.
@@ -164,6 +164,7 @@ function alx() {
   });
   return {
     sky: sky(['#2c4a40']),
+    under: '#7a4e2c',
     layers: [
       { img: board, speed: 0.22, y: 0 },
       { img: paper, speed: 0.4, y: 0 },
@@ -223,6 +224,7 @@ function cairo() {
   });
   return {
     sky: sky(['#2f2460', '#4c2c74', '#7b3a7e', '#b24f79', '#e0746a', '#f4a35e', '#f8c76e']),
+    under: '#2c1940',
     sun: { x: 70, y: 104, r: 14, color: '#ffd97a', rim: '#f8a85a' },
     layers: [
       { img: far, speed: 0.1, y: 0 },
@@ -272,6 +274,7 @@ function hearts() {
   });
   return {
     sky: sky(['#101330']),
+    under: '#141735',
     layers: [
       { img: far, speed: 0.15, y: 0 },
       { img: near, speed: 0.34, y: 0 },
@@ -387,6 +390,48 @@ function skylineStrip(w, seed, h0, colors, lit) {
   });
 }
 
+// Doha at noon: white light, pale towers far away, low villas up close.
+function dohaday() {
+  const far = skylineStrip(240, 909, 30, ['#a9c9dc', '#b6d3e3', '#9fc2d8'], ['#c9e0ec', '#dcecf4']);
+  const near = strip(640, 180, (ctx, w) => {
+    const r = rng(910);
+    const top = 132;
+    const walls = ['#f2e6cf', '#ead9bb', '#f6eedd', '#e3cfae'];
+    let x = 0;
+    while (x < w) {
+      const wd = 44 + Math.floor(r() * 34);
+      const room = Math.min(wd, w - x);
+      const ht = 26 + Math.floor(r() * 16);
+      rect(ctx, walls[Math.floor(r() * walls.length)], x, top - ht, room, ht + 48);
+      rect(ctx, '#cdb891', x, top - ht, room, 2);
+      for (let i = x + 2; i < x + room - 2; i += 6) rect(ctx, '#fff7e6', i, top - ht - 2, 3, 2);
+      for (let i = x + 7; i < x + room - 8; i += 15) {
+        rect(ctx, '#7fb2c9', i, top - ht + 8, 8, 10);
+        rect(ctx, '#b84a1f', i - 1, top - ht + 6, 10, 2);
+      }
+      if (r() < 0.4 && room > 30) {
+        rect(ctx, '#d9d4c9', x + room - 14, top - ht - 7, 9, 6);
+        rect(ctx, '#a79f96', x + room - 11, top - ht - 2, 2, 2);
+      }
+      x += wd;
+    }
+    minaret(ctx, 170, top + 2, 72, '#efe2c8', '#2b8ea3');
+    dome(ctx, 192, top - 18, 14, '#58b6c8');
+    rect(ctx, '#efe2c8', 178, top - 18, 28, 20);
+    minaret(ctx, 470, top + 2, 60, '#efe2c8', '#2b8ea3');
+    for (const px of [80, 300, 390, 560]) palmShape(ctx, px, top + 2, 34 + (px % 9), '#4f9a3c');
+  });
+  return {
+    sky: sky(['#6fc0ea', '#86cdef', '#9dd8f2', '#b5e2f4', '#cdebf5', '#e3f3f4']),
+    under: '#e3cfae',
+    sun: { x: 268, y: 26, r: 13, color: '#fffbe0', rim: '#fff0a8' },
+    layers: [
+      { img: far, speed: 0.1, y: -4 },
+      { img: near, speed: 0.26, y: 0 },
+    ],
+  };
+}
+
 function corniche() {
   const stars = makeCanvas(320, 180);
   {
@@ -411,7 +456,8 @@ function corniche() {
   });
   return {
     sky: stars,
-    moon: { x: 262, y: 34 },
+    under: '#142a5e',
+    moon: { x: 298, y: 26 },
     layers: [
       { img: far, speed: 0.12, y: -4 },
       { img: near, speed: 0.24, y: 0 },
@@ -420,7 +466,20 @@ function corniche() {
   };
 }
 
-const BUILDERS = { tanta, alx, cairo, hearts, dunes, souq, corniche };
+// The opening street, after dark: the very same picture with the lights off.
+function dohanight() {
+  const bg = dohaday();
+  const stars = makeCanvas(320, 180);
+  const ctx = stars.getContext('2d');
+  bandedSky(ctx, ['#0d0f33', '#121544', '#1a1c56', '#252567', '#352e78', '#4c3a86'], 320, 180);
+  const r = rng(77);
+  for (let i = 0; i < 70; i++) rect(ctx, r() < 0.2 ? '#fff7e6' : '#a8a4d8', Math.floor(r() * 320), Math.floor(r() * 100));
+  return {
+    ...bg, sky: stars, sun: null, moon: { x: 268, y: 28 }, tint: '#141646', under: '#2a2440',
+  };
+}
+
+const BUILDERS = { dohaday, dohanight, tanta, alx, cairo, hearts, dunes, souq, corniche };
 
 export function buildBackground(theme) {
   return BUILDERS[theme]();
@@ -448,6 +507,8 @@ export function drawBackground(ctx, bg, camX, camY, t) {
     const y = (layer.y ?? 0) - Math.round(camY * 0.4);
     for (; x < 320; x += w) ctx.drawImage(layer.img, x, y);
   }
+  const lifted = Math.round(camY * 0.4);
+  if (lifted > 0 && bg.under) rect(ctx, bg.under, 0, 180 - lifted, 320, lifted);
   if (bg.leds) {
     // A few LEDs that actually blink, on top of the painted ones.
     const r = rng(Math.floor(t / 20));

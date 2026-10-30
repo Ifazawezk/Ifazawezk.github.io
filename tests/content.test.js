@@ -21,7 +21,7 @@ test('no line is empty', () => {
 
 test('Arabic lines are actually in Arabic, apart from a few names', () => {
   const sameOnPurpose = new Set([
-    'dir', 'ui.lang', 'ui.langLabel', 'bug.ref', 'bug.segfault', 'end.linkedin', 'end.github', 'level.hearts',
+    'dir', 'ui.lang', 'ui.langLabel', 'bug.ref', 'bug.segfault', 'end.linkedin', 'end.github', 'level.hearts', 'grow.2',
   ]);
   for (const [key, value] of Object.entries(STRINGS.ar)) {
     if (sameOnPurpose.has(key)) continue;
