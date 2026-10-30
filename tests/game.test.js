@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TILE, T } from '../src/game/physics.js';
-import { createSession, createGame, startRun, step, worldOf } from '../src/game/game.js';
+import { createSession, createGame, startRun, step, worldOf, CUP_POINTS, CAFFEINE_FULL } from '../src/game/game.js';
 
 const none = { left: false, right: false, jump: false, action: false };
 const right = { ...none, right: true };
@@ -66,4 +66,41 @@ test('the same inputs always give the same result', () => {
     step(b.s, b.g, input);
   }
   assert.deepEqual([a.g.p.x, a.g.p.y], [b.g.p.x, b.g.p.y]);
+});
+
+test('a cup is drunk once and scores once', () => {
+  const { s, g } = fresh();
+  const cup = g.cups[0];
+  g.p.x = cup.x;
+  g.p.y = cup.y;
+  step(s, g, none);
+  assert.equal(g.cupsTaken, 1);
+  assert.equal(g.score, CUP_POINTS);
+  assert.equal(cup.taken, true);
+  step(s, g, none);
+  assert.equal(g.cupsTaken, 1);
+});
+
+test('the best score follows the score up and survives a new run', () => {
+  const { s, g } = fresh();
+  g.best = 5;
+  const cup = g.cups[0];
+  g.p.x = cup.x;
+  g.p.y = cup.y;
+  step(s, g, none);
+  assert.equal(g.best, CUP_POINTS);
+  startRun(s, g);
+  assert.equal(g.score, 0);
+  assert.equal(g.best, CUP_POINTS);
+});
+
+test('a full caffeine meter makes Faza faster for a while', () => {
+  const { s, g } = fresh();
+  g.caffeine = CAFFEINE_FULL - 1;
+  const cup = g.cups[0];
+  g.p.x = cup.x;
+  g.p.y = cup.y;
+  step(s, g, none);
+  assert.ok(g.hyperT > 0);
+  assert.equal(g.caffeine, 0);
 });

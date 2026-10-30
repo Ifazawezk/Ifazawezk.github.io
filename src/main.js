@@ -2,11 +2,14 @@ import { createSession, createGame, startRun, step, worldOf } from './game/game.
 import { createRenderer } from './render.js';
 import { createInput } from './input.js';
 import { createUI } from './ui.js';
+import { makeStore } from './store.js';
 
 const TICK = 1000 / 60;
 
+const store = makeStore();
 const session = createSession();
 const game = createGame();
+game.best = store.get('best', 0);
 const renderer = createRenderer(document.getElementById('game'));
 const ui = createUI({ lang: 'en', boringHref: () => 'boring/' });
 const input = createInput(() => { if (game.phase === 'title') begin(); });
@@ -19,6 +22,7 @@ function handleEvents() {
   for (const e of game.events) {
     renderer.onEvent(e, game);
     if (e.type === 'level') ui.showBanner(`level.${e.id}`, `level.${e.id}.sub`);
+    if (e.type === 'best') store.set('best', e.best);
   }
 }
 

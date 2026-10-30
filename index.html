@@ -11,6 +11,12 @@
   <div id="stage">
     <canvas id="game" width="320" height="180"></canvas>
     <div id="overlay">
+      <div id="hud">
+        <div id="hud-cups"><span id="cup-icon" aria-hidden="true"></span><span id="cups">0</span></div>
+        <div id="hud-meter" aria-hidden="true"><i id="meter-fill"></i></div>
+        <div id="hud-score"><span data-t="ui.score">SCORE</span> <b id="score">0</b></div>
+        <div id="hud-best"><span data-t="ui.best">BEST</span> <b id="best">0</b></div>
+      </div>
       <div id="bubble" hidden>
         <div id="bubble-box"><span id="bubble-text"></span></div>
         <div id="bubble-tail"></div>

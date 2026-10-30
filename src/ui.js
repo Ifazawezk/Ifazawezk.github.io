@@ -1,5 +1,5 @@
 import { say } from './content/strings.js';
-import { VIEW_W, VIEW_H } from './game/game.js';
+import { VIEW_W, VIEW_H, CAFFEINE_FULL } from './game/game.js';
 
 // Everything translatable sits in the DOM on top of the canvas, so Arabic gets
 // real shaping and screen readers get real text. The canvas never holds words
@@ -20,9 +20,13 @@ export function createUI({ lang, boringHref }) {
     bannerSub: $('banner-sub'),
     boring: $('boring'),
     langBtn: $('lang'),
+    cups: $('cups'),
+    score: $('score'),
+    best: $('best'),
+    meter: $('meter-fill'),
   };
 
-  const state = { lang, bubbleKey: null, bannerT: 0 };
+  const state = { lang, bubbleKey: null, bannerT: 0, hud: {} };
 
   function t(key) {
     return say(state.lang, key);
@@ -59,7 +63,21 @@ export function createUI({ lang, boringHref }) {
     els.bubbleText.textContent = '';
   }
 
+  function setNumber(el, key, value) {
+    if (state.hud[key] === value) return;
+    state.hud[key] = value;
+    el.textContent = value;
+  }
+
   function update(g, renderer) {
+    setNumber(els.cups, 'cups', g.cupsTaken);
+    setNumber(els.score, 'score', g.score);
+    setNumber(els.best, 'best', g.best);
+    const meter = g.hyperT > 0 ? 100 : Math.round((g.caffeine / CAFFEINE_FULL) * 100);
+    if (state.hud.meter !== meter) {
+      state.hud.meter = meter;
+      els.meter.style.width = `${meter}%`;
+    }
     if (state.bannerT > 0) {
       state.bannerT--;
       if (state.bannerT === 0) els.banner.hidden = true;

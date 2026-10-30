@@ -29,6 +29,14 @@ button, a { font-family: inherit; }
 #game { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; image-rendering: pixelated; display: block; }
 #overlay { position: absolute; inset: 0; pointer-events: none; }
 
+#hud { position: absolute; top: calc(4 * var(--px)); left: calc(5 * var(--px)); right: calc(5 * var(--px)); display: flex; align-items: center; gap: calc(7 * var(--px)); font-size: calc(8 * var(--px) * var(--text-scale)); text-shadow: var(--px) var(--px) 0 var(--ink); line-height: 1; }
+#hud b { font-weight: 600; color: var(--tea); }
+#hud-cups { display: flex; align-items: center; gap: calc(2 * var(--px)); font-weight: 600; }
+#cup-icon { width: calc(9 * var(--px)); height: calc(10 * var(--px)); background: url('assets/cup.png') center / 100% 100% no-repeat; image-rendering: pixelated; }
+#hud-meter { width: calc(30 * var(--px)); height: calc(5 * var(--px)); background: var(--ink); border: var(--px) solid var(--ink); }
+#meter-fill { display: block; height: 100%; width: 0; background: var(--tea); }
+#hud-best { margin-inline-end: auto; }
+
 #bubble { position: absolute; top: calc(22 * var(--px)); left: calc(50 * var(--px)); right: calc(50 * var(--px)); display: flex; flex-direction: column; align-items: stretch; }
 #bubble-box {
   background: var(--paper); color: var(--ink);

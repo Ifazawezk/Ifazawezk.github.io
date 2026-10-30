@@ -1,4 +1,4 @@
-import { TILE, T, touchesTile } from './physics.js';
+import { TILE, T, overlaps, touchesTile } from './physics.js';
 import { newPlayer, updatePlayer } from './player.js';
 import { moverPos } from './world.js';
 import { buildWorlds } from './levels/index.js';
@@ -9,6 +9,9 @@ const CLEAR_TICKS = 60;
 const DEAD_TICKS = 36;
 const BUBBLE_LINGER = 150;
 const SIGN_RANGE = 42;
+export const CUP_POINTS = 10;
+export const CAFFEINE_FULL = 12;
+const HYPER_TICKS = 420;
 
 // The world never changes during a run, so it lives outside the game state.
 // That keeps the state a small plain object, cheap to copy for the test bot.
@@ -27,6 +30,13 @@ export function createGame() {
     deadT: 0,
     clearT: 0,
     retries: 0,
+    score: 0,
+    best: 0,
+    cups: [],
+    cupsTaken: 0,
+    caffeine: 0,
+    hyperT: 0,
+    seen: [],
     check: null,
     checksOn: [],
     bubble: null,
@@ -51,11 +61,13 @@ export function loadLevel(s, g, index) {
   g.checksOn = [];
   g.bubble = null;
   g.deadT = 0;
+  g.cups = world.cups.map((c) => ({ x: c.x, y: c.y, w: 10, h: 10, taken: false }));
   emit(g, 'level', { index, id: world.id });
 }
 
 export function startRun(s, g) {
-  Object.assign(g, createGame());
+  const { best } = g;
+  Object.assign(g, createGame(), { best });
   g.phase = 'play';
   loadLevel(s, g, 0);
 }
@@ -84,7 +96,8 @@ function updateMoversAndPlayer(g, world, input) {
   p.rideDx = riding >= 0 ? now[riding].x - before[riding].x : 0;
 
   const prevBottom = p.y + p.h;
-  const res = updatePlayer(p, input, world, g.t);
+  const hyper = g.hyperT > 0;
+  const res = updatePlayer(p, input, world, g.t, { boost: hyper ? 1.35 : 1, airJumps: hyper ? 1 : 0 });
   if (res.jumped) emit(g, 'jump');
   if (res.bounced) emit(g, 'bounce');
   if (res.landed) emit(g, 'land');
@@ -109,6 +122,31 @@ function updateMoversAndPlayer(g, world, input) {
   }
 }
 
+function addScore(g, n) {
+  g.score += n;
+  if (g.score > g.best) {
+    g.best = g.score;
+    emit(g, 'best', { best: g.best });
+  }
+}
+
+function updateCups(g) {
+  const p = g.p;
+  for (const c of g.cups) {
+    if (c.taken || !overlaps(p, c)) continue;
+    c.taken = true;
+    g.cupsTaken++;
+    addScore(g, CUP_POINTS);
+    emit(g, 'cup', { x: c.x, y: c.y });
+    g.caffeine++;
+    if (g.caffeine >= CAFFEINE_FULL) {
+      g.caffeine = 0;
+      g.hyperT = HYPER_TICKS;
+      emit(g, 'hyper');
+    }
+  }
+}
+
 function updateSigns(g, world) {
   const p = g.p;
   const cx = p.x + p.w / 2;
@@ -123,6 +161,7 @@ function updateSigns(g, world) {
   }
   if (near) {
     if (!g.bubble || g.bubble.key !== near.key) emit(g, 'bubble', { key: near.key });
+    if (!g.seen.includes(near.key)) g.seen.push(near.key);
     g.bubble = { ...near, left: BUBBLE_LINGER };
   } else if (g.bubble) {
     g.bubble.left--;
@@ -158,6 +197,8 @@ function playTick(s, g, input) {
   if (touchesTile(p, world, [T.WATER])) { die(g, 'water'); return; }
   if (p.y > world.rows * TILE + 24) { die(g, 'fall'); return; }
 
+  if (g.hyperT > 0) g.hyperT--;
+  updateCups(g);
   updateChecks(g, world);
   updateSigns(g, world);
 

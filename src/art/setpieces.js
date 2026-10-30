@@ -37,7 +37,10 @@ const PIECES = {
     }
     rect(ctx, INK, 44, 10, 32, 13);
     rect(ctx, '#efe2c8', 45, 11, 30, 11);
-    for (let i = 0; i < 18; i++) rect(ctx, '#efe2c8', 60 - i * 1.6, 9 - i / 2.2 + 2, i * 3.2 + 1, 1);
+    for (let i = 0; i < 10; i++) {
+      rect(ctx, INK, 60 - i * 2.6 - 1, 11 + i, i * 5.2 + 3, 1);
+      rect(ctx, '#efe2c8', 60 - i * 2.6, 11 + i, i * 5.2 + 1, 1);
+    }
     rect(ctx, INK, 0, 21, w, 2);
     rect(ctx, '#c9b693', 2, 20, w - 4, 1);
     for (const x of [40, 52, 62, 74]) column(ctx, x, 40, h);
