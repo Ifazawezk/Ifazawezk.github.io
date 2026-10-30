@@ -1,8 +1,11 @@
 import { TILE, T, PHYS, overlaps, touchesTile } from './physics.js';
 import { newPlayer, updatePlayer } from './player.js';
 import { moverPos } from './world.js';
-import { buildWorlds } from './levels/index.js';
+import { buildWorlds, SOUQ_INDEX } from './levels/index.js';
+import { parseLevel } from './world.js';
+import { souqDef } from './levels/souq.js';
 import { makeBug, updateBug, splitBug, BUG_POINTS } from './bugs.js';
+import { makeBoss, updateBoss, BOSS_POINTS } from './boss.js';
 
 export const VIEW_W = 320;
 export const VIEW_H = 180;
@@ -17,8 +20,23 @@ const HYPER_TICKS = 420;
 
 // The world never changes during a run, so it lives outside the game state.
 // That keeps the state a small plain object, cheap to copy for the test bot.
-export function createSession() {
-  return { worlds: buildWorlds() };
+export function createSession(repos = []) {
+  const worlds = buildWorlds(repos);
+  return { worlds, repos, totalCups: countCups(worlds) };
+}
+
+function countCups(worlds) {
+  return worlds.reduce((sum, w) => sum + w.cups.length, 0);
+}
+
+// New stock can arrive from GitHub at any moment. Never swap the souq while
+// someone is standing in it.
+export function setRepos(s, g, repos) {
+  s.repos = repos;
+  if (g.phase === 'play' && g.level === SOUQ_INDEX) return false;
+  s.worlds[SOUQ_INDEX] = parseLevel(souqDef(repos));
+  s.totalCups = countCups(s.worlds);
+  return true;
 }
 
 export function createGame() {
@@ -35,6 +53,11 @@ export function createGame() {
     battery: FULL_BATTERY,
     bugs: [],
     stomped: 0,
+    boss: null,
+    invites: [],
+    stall: -1,
+    actionHeld: false,
+    skips: 0,
     score: 0,
     best: 0,
     cups: [],
@@ -68,6 +91,9 @@ export function loadLevel(s, g, index) {
   g.deadT = 0;
   g.cups = world.cups.map((c) => ({ x: c.x, y: c.y, w: 10, h: 10, taken: false }));
   g.bugs = world.bugs.map((b) => makeBug(b.type, b.x, b.feet, b));
+  g.boss = world.bossSpawn ? makeBoss(world.bossSpawn, world) : null;
+  g.invites = [];
+  g.stall = -1;
   emit(g, 'level', { index, id: world.id });
 }
 
@@ -203,7 +229,43 @@ function updateBugs(g, world, input) {
   if (g.bugs.length > 0 && g.t % 60 === 0) g.bugs = g.bugs.filter((b) => b.dead < 40);
 }
 
+function updateStalls(g, world, input) {
+  const p = g.p;
+  const cx = p.x + p.w / 2;
+  g.stall = world.stalls.findIndex((st) => cx >= st.x && cx < st.x + st.w && p.y + p.h > st.feet - 90);
+  const pressed = input.action && !g.actionHeld;
+  g.actionHeld = !!input.action;
+  if (pressed && g.stall >= 0) {
+    const { repo } = world.stalls[g.stall];
+    emit(g, 'open-repo', { url: repo.url, name: repo.name });
+  }
+}
+
+function updateFinalBoss(g) {
+  if (!g.boss) return;
+  updateBoss(g.boss, g, {
+    emit: (type, data) => emit(g, type, data),
+    hurt: (fromX) => hurt(g, fromX),
+    shout: (key) => {
+      g.bubble = { key, x: g.boss.x + 12, y: g.boss.y, left: 150, boss: true };
+      emit(g, 'bubble', { key });
+    },
+    defeated: () => {
+      g.stomped++;
+      addScore(g, BOSS_POINTS);
+      emit(g, 'stomp', { name: 'bug.deadline', x: g.boss.x + 12, y: g.boss.y });
+      emit(g, 'boss-down');
+    },
+  });
+}
+
 function updateSigns(g, world) {
+  // The Deadline talks over everybody, as deadlines do.
+  if (g.bubble?.boss) {
+    g.bubble.x = g.boss.x + 12;
+    if (--g.bubble.left <= 0) g.bubble = null;
+    return;
+  }
   const p = g.p;
   const cx = p.x + p.w / 2;
   let near = null;
@@ -216,6 +278,7 @@ function updateSigns(g, world) {
     if (dx < SIGN_RANGE && Math.abs(npc.feet - (p.y + p.h)) < 70) near = { key: npc.key, x: npc.x + 8, y: npc.feet - 20 };
   }
   if (near) {
+    near.key ??= 'souq.hello';
     if (!g.bubble || g.bubble.key !== near.key) emit(g, 'bubble', { key: near.key });
     if (!g.seen.includes(near.key)) g.seen.push(near.key);
     g.bubble = { ...near, left: BUBBLE_LINGER };
@@ -254,19 +317,31 @@ function playTick(s, g, input) {
   if (p.y > world.rows * TILE + 24) { die(g, 'fall'); return; }
   if (touchesTile(p, world, [T.SPIKE])) hurt(g, p.x + p.w / 2 - p.dir * 4);
   updateBugs(g, world, input);
+  updateFinalBoss(g);
   if (g.deadT > 0) return;
 
   if (g.hyperT > 0) g.hyperT--;
   updateCups(g);
   updateChecks(g, world);
-  updateSigns(g, world);
+  updateStalls(g, world, input);
+  if (g.stall < 0 || g.bubble?.boss) updateSigns(g, world);
+  else g.bubble = null;
 
   const goal = world.goal;
-  if (p.x + p.w > goal.x + 8 && Math.abs(p.y + p.h - goal.feet) < 40) {
+  const blocked = g.boss && !g.boss.defeated;
+  if (!blocked && p.x + p.w > goal.x + 8 && Math.abs(p.y + p.h - goal.feet) < 40) {
     g.phase = 'clear';
     g.clearT = CLEAR_TICKS;
     emit(g, 'clear', { index: g.level });
   }
+}
+
+// From the pause menu. Allowed, counted, gently mocked at the end.
+export function skipLevel(s, g) {
+  if (g.phase !== 'play') return;
+  g.skips++;
+  g.phase = 'clear';
+  g.clearT = 1;
 }
 
 export function step(s, g, input) {
