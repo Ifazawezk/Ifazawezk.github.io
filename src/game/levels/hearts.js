@@ -2,6 +2,7 @@
 // time, crates are containers, and the aisle at the end has things in the roof.
 export const hearts = {
   id: 'hearts',
+  stage: 4,
   theme: 'hearts',
   goalKind: 'hatch',
   signs: ['hearts.hello', 'hearts.api', 'hearts.cron', 'hearts.platform', 'hearts.graph', 'hearts.bye'],

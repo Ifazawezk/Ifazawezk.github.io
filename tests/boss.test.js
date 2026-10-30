@@ -149,7 +149,7 @@ test('skipping a level is possible, and counted', () => {
   const g = createGame();
   startRun(s, g);
   skipLevel(s, g);
-  for (let i = 0; i < 5; i++) step(s, g, none);
+  for (let i = 0; i < 300 && g.phase !== 'play'; i++) step(s, g, none);
   assert.equal(g.level, 1);
   assert.equal(g.skips, 1);
 });

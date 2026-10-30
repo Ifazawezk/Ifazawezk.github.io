@@ -101,6 +101,14 @@ test('every project listed is a real repo from the snapshot', () => {
   assert.deepEqual([...listed].sort(), [...repos].sort());
 });
 
+test('the story on both pages says he went away and came home', () => {
+  assert.match(en, /until 2022/);
+  assert.match(en, /Tanta University/);
+  assert.match(en, /came back to Doha/);
+  assert.match(ar, /لحد 2022/);
+  assert.match(ar, /رجعت الدوحة/);
+});
+
 test('the 404 page exists and leads back', () => {
   const page = readFileSync('404.html', 'utf8');
   assert.match(page, /href="\/"/);

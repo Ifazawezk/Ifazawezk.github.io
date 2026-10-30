@@ -61,6 +61,10 @@ button, a { font-family: inherit; }
 #banner-title { font-size: calc(15 * var(--px) * var(--text-scale)); font-weight: 600; color: var(--tea); }
 #banner-sub { font-size: calc(7.5 * var(--px) * var(--text-scale)); }
 
+#grow-card { position: absolute; left: 0; right: 0; top: calc(24 * var(--px)); text-align: center; text-shadow: var(--px) var(--px) 0 var(--ink), calc(-1 * var(--px)) 0 0 var(--ink), var(--px) 0 0 var(--ink), 0 calc(-1 * var(--px)) 0 var(--ink); }
+#grow-title { font-size: calc(19 * var(--px) * var(--text-scale)); font-weight: 600; color: var(--tea); line-height: 1; }
+#grow-sub { font-size: calc(9 * var(--px) * var(--text-scale)); margin-top: var(--px); }
+
 #below { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
 .btn { background: var(--paper); color: var(--ink); border: 0; padding: 8px 14px; font-size: 18px; cursor: pointer; text-decoration: none; box-shadow: 0 -3px 0 var(--ink), 0 3px 0 var(--ink), -3px 0 0 var(--ink), 3px 0 0 var(--ink), 3px 6px 0 #0007; }
 .btn:hover { background: var(--tea); }

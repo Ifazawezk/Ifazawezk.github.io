@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TILE, T } from '../src/game/physics.js';
-import { createSession, createGame, startRun, step, worldOf, CUP_POINTS, CAFFEINE_FULL } from '../src/game/game.js';
+import { createSession, createGame, startRun, step, worldOf, loadLevel, CUP_POINTS, CAFFEINE_FULL } from '../src/game/game.js';
 
 const none = { left: false, right: false, jump: false, action: false };
 const right = { ...none, right: true };
@@ -29,6 +29,7 @@ test('stepping forward moves the hero and counts time', () => {
 
 test('falling in water costs a retry and puts you back', () => {
   const { s, g } = fresh();
+  loadLevel(s, g, s.worlds.findIndex((x) => x.id === 'tanta'));
   const w = worldOf(s, g);
   const water = w.tiles.indexOf(T.WATER);
   g.p.x = (water % w.cols) * TILE + 3;

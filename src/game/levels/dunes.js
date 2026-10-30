@@ -1,6 +1,7 @@
 // Level 5, part one: sand. Short on purpose, a breather after the server room.
 export const dunes = {
   id: 'dunes',
+  stage: 5,
   theme: 'dunes',
   goalKind: 'arch',
   signs: ['dunes.hello', 'dunes.lang', 'dunes.exp', 'dunes.skills'],

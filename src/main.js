@@ -32,7 +32,15 @@ function begin() {
 function handleEvents() {
   for (const e of game.events) {
     renderer.onEvent(e, game);
-    if (e.type === 'level') ui.showBanner(`level.${e.id}`, `level.${e.id}.sub`);
+    if (e.type === 'level') {
+      ui.hideGrowth();
+      ui.showBanner(`level.${e.id}`, `level.${e.id}.sub`);
+    }
+    if (e.type === 'grow') ui.showGrowth(e.to);
+    if (e.type === 'grow-here') {
+      const pos = renderer.toScreen(e.x, e.y - 8);
+      ui.float(ui.t(`grow.${e.to}`), pos.x, pos.y, 'good');
+    }
     if (e.type === 'best') store.set('best', e.best);
     if (e.type === 'stomp' || e.type === 'stomp-soft') {
       const pos = renderer.toScreen(e.x, e.y - 6);

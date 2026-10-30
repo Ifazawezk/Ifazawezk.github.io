@@ -3,6 +3,7 @@
 // dashboard pad is the only way over the widest street.
 export const cairo = {
   id: 'cairo',
+  stage: 3,
   theme: 'cairo',
   goalKind: 'roofdoor',
   signs: ['cairo.hello', 'cairo.sql', 'cairo.powerbi', 'cairo.auto', 'cairo.bye'],

@@ -387,6 +387,47 @@ function skylineStrip(w, seed, h0, colors, lit) {
   });
 }
 
+// Doha at noon: white light, pale towers far away, low villas up close.
+function dohaday() {
+  const far = skylineStrip(240, 909, 30, ['#a9c9dc', '#b6d3e3', '#9fc2d8'], ['#c9e0ec', '#dcecf4']);
+  const near = strip(640, 180, (ctx, w) => {
+    const r = rng(910);
+    const top = 132;
+    const walls = ['#f2e6cf', '#ead9bb', '#f6eedd', '#e3cfae'];
+    let x = 0;
+    while (x < w) {
+      const wd = 44 + Math.floor(r() * 34);
+      const room = Math.min(wd, w - x);
+      const ht = 26 + Math.floor(r() * 16);
+      rect(ctx, walls[Math.floor(r() * walls.length)], x, top - ht, room, ht + 48);
+      rect(ctx, '#cdb891', x, top - ht, room, 2);
+      for (let i = x + 2; i < x + room - 2; i += 6) rect(ctx, '#fff7e6', i, top - ht - 2, 3, 2);
+      for (let i = x + 7; i < x + room - 8; i += 15) {
+        rect(ctx, '#7fb2c9', i, top - ht + 8, 8, 10);
+        rect(ctx, '#b84a1f', i - 1, top - ht + 6, 10, 2);
+      }
+      if (r() < 0.4 && room > 30) {
+        rect(ctx, '#d9d4c9', x + room - 14, top - ht - 7, 9, 6);
+        rect(ctx, '#a79f96', x + room - 11, top - ht - 2, 2, 2);
+      }
+      x += wd;
+    }
+    minaret(ctx, 170, top + 2, 72, '#efe2c8', '#2b8ea3');
+    dome(ctx, 192, top - 18, 14, '#58b6c8');
+    rect(ctx, '#efe2c8', 178, top - 18, 28, 20);
+    minaret(ctx, 470, top + 2, 60, '#efe2c8', '#2b8ea3');
+    for (const px of [80, 300, 390, 560]) palmShape(ctx, px, top + 2, 34 + (px % 9), '#4f9a3c');
+  });
+  return {
+    sky: sky(['#6fc0ea', '#86cdef', '#9dd8f2', '#b5e2f4', '#cdebf5', '#e3f3f4']),
+    sun: { x: 268, y: 26, r: 13, color: '#fffbe0', rim: '#fff0a8' },
+    layers: [
+      { img: far, speed: 0.1, y: -4 },
+      { img: near, speed: 0.26, y: 0 },
+    ],
+  };
+}
+
 function corniche() {
   const stars = makeCanvas(320, 180);
   {
@@ -420,7 +461,7 @@ function corniche() {
   };
 }
 
-const BUILDERS = { tanta, alx, cairo, hearts, dunes, souq, corniche };
+const BUILDERS = { dohaday, tanta, alx, cairo, hearts, dunes, souq, corniche };
 
 export function buildBackground(theme) {
   return BUILDERS[theme]();

@@ -49,6 +49,8 @@ export function parseLevel(def) {
     id: def.id,
     theme: def.theme,
     goalKind: def.goalKind ?? null,
+    stage: def.stage ?? 2,
+    grows: [],
     cols,
     rows: rows.length,
     tiles: new Uint8Array(cols * rows.length),
@@ -100,7 +102,8 @@ export function parseLevel(def) {
       } else {
         const entry = def.legend?.[c];
         if (!entry) throw new Error(`${def.id}: unknown map letter ${c} at ${x},${y}`);
-        if (entry.bug) world.bugs.push({ type: entry.bug, x: px, feet, ...entry.opts });
+        if (entry.grow !== undefined) world.grows.push({ x: px, stage: entry.grow });
+        else if (entry.bug) world.bugs.push({ type: entry.bug, x: px, feet, ...entry.opts });
         else if (entry.npc) world.npcs.push({ kind: entry.npc, x: px, feet, key: entry.say, flip: !!entry.flip });
         else if (entry.prop) world.props.push({ kind: entry.prop, x: px, feet, front: !!entry.front });
       }

@@ -27,6 +27,9 @@ export function createUI({ lang, boringHref }) {
     battery: $('hud-battery'),
     cells: [...$('hud-battery').children],
     floats: $('floats'),
+    growCard: $('grow-card'),
+    growTitle: $('grow-title'),
+    growSub: $('grow-sub'),
   };
 
   const state = { lang, bubbleKey: null, bannerT: 0, hud: {} };
@@ -63,6 +66,17 @@ export function createUI({ lang, boringHref }) {
     if (els.bubbleText.textContent !== text) els.bubbleText.textContent = text;
     const pct = Math.max(6, Math.min(94, (screenX / VIEW_W) * 100));
     els.bubbleTail.style.left = `${pct}%`;
+  }
+
+  function showGrowth(stage) {
+    els.growCard.dir = state.lang === 'ar' ? 'rtl' : 'ltr';
+    els.growTitle.textContent = t(`grow.${stage}`);
+    els.growSub.textContent = t(`grow.${stage}.sub`);
+    els.growCard.hidden = false;
+  }
+
+  function hideGrowth() {
+    els.growCard.hidden = true;
   }
 
   function hideBubble() {
@@ -116,5 +130,5 @@ export function createUI({ lang, boringHref }) {
   }
 
   applyLang();
-  return { t, update, showBanner, applyLang, float, state, els };
+  return { t, update, showBanner, showGrowth, hideGrowth, applyLang, float, state, els };
 }

@@ -45,6 +45,7 @@ export function souqDef(repos) {
   return {
     id: 'souq',
     theme: 'souq',
+    stage: 5,
     goalKind: 'promenade',
     signs: ['souq.hello'],
     stalls,

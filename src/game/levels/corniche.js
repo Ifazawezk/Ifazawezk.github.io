@@ -2,6 +2,7 @@
 // long empty promenade with a calendar at the end of it.
 export const corniche = {
   id: 'corniche',
+  stage: 5,
   theme: 'corniche',
   goalKind: 'finish',
   night: true,

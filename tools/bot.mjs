@@ -156,7 +156,7 @@ export function playGame(session, { log = () => {}, stalls = true } = {}) {
   const opened = [];
 
   while (g.phase !== 'ending') {
-    if (g.phase === 'clear') {
+    if (g.phase !== 'play') {
       tape.push(0);
       step(session, g, unpack(0));
       continue;

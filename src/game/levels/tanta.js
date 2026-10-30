@@ -1,6 +1,7 @@
 // Level 1: Tanta and the delta fields. Teach run, jump and canals, then leave.
 export const tanta = {
   id: 'tanta',
+  stage: 2,
   theme: 'tanta',
   goalKind: 'train',
   signs: ['tanta.hello', 'tanta.uni', 'tanta.bugs', 'tanta.canal', 'tanta.spoiler'],

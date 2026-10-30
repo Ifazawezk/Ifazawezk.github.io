@@ -1,8 +1,9 @@
 import { T, TILE, isSolidTile } from './game/physics.js';
 import { moverPos } from './game/world.js';
-import { VIEW_W, VIEW_H } from './game/game.js';
+import { VIEW_W, VIEW_H, GROW_TICKS } from './game/game.js';
 import { makeCanvas, rect } from './art/paint.js';
-import { FAZA, CUP, BUGS, DEADLINE, INVITE, NPCS, PROPS } from './art/sprites.js';
+import { CUP, BUGS, DEADLINE, INVITE, NPCS, PROPS } from './art/sprites.js';
+import { STAGES, LAST_STAGE } from './art/faza.js';
 import { bakeAll, bake, bakePair } from './art/bake.js';
 import { buildTiles } from './art/tiles.js';
 import { buildBackground, drawBackground } from './art/backgrounds.js';
@@ -15,7 +16,7 @@ let SPR = null;
 export function bakeSprites() {
   if (SPR) return SPR;
   SPR = {
-    faza: bakeAll(FAZA),
+    faza: STAGES.map((stage) => bakeAll(stage.frames)),
     cup: CUP.map((rows) => bake(rows)),
     bugs: Object.fromEntries(Object.entries(BUGS).map(([k, frames]) => [k, frames.map(bakePair)])),
     deadline: bakeAll(DEADLINE),
@@ -107,6 +108,7 @@ export function createRenderer(canvas) {
     if (e.type === 'hurt' || e.type === 'die') { burst(p.x + 5, p.y + 8, ['#e0403f', '#fff7e6'], 10, 1.6); state.shake = 6; }
     if (e.type === 'boss-hit') { burst(e.x, e.y, ['#e0403f', '#fff7e6', '#f7b733'], 16, 2.2); state.shake = 10; }
     if (e.type === 'checkpoint') burst(p.x + 5, p.y, ['#8fd14f', '#fff7e6'], 8, 1.1);
+    if (e.type === 'grow-here') burst(e.x, e.y, ['#f7b733', '#fff7e6', '#58d3e0'], 18, 1.8);
   }
 
   function ensureWorld(world) {
@@ -295,15 +297,35 @@ export function createRenderer(canvas) {
     for (const inv of g.invites ?? []) ctx.drawImage(SPR.invite, Math.round(inv.x - cx), Math.round(inv.y - cy));
   }
 
+  // Old Faza and new Faza flicker back and forth, faster and faster, then pop.
+  function drawGrowth(g) {
+    const u = 1 - g.growT / GROW_TICKS;
+    ctx.fillStyle = '#1c1530';
+    ctx.globalAlpha = 0.8;
+    ctx.fillRect(0, 44, VIEW_W, 96);
+    ctx.globalAlpha = 1;
+    const swapEvery = Math.max(2, Math.round(16 - u * 20));
+    const grown = u >= 0.62 || (u > 0.15 && Math.floor(g.t / swapEvery) % 2 === 0);
+    const stage = grown ? g.growTo : g.growFrom;
+    const img = SPR.faza[stage][u >= 0.62 && Math.floor(g.t / 10) % 2 ? 'cheer' : 'idle0'][1];
+    const w = img.width * 3;
+    const h = img.height * 3;
+    ctx.drawImage(img, Math.round(VIEW_W / 2 - w / 2), 136 - h, w, h);
+    if (u >= 0.62 && u < 0.67 && !state.reduced) {
+      ctx.fillStyle = '#fff7e6';
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    }
+  }
+
   function drawPlayer(g, cx, cy) {
     const p = g.p;
     if (p.inv > 0 && g.t % 6 < 3) return;
-    if (g.phase === 'ending') return;
+    if (g.phase === 'ending' || g.phase === 'grow') return;
     const name = g.deadT > 0 ? 'hurt' : g.phase === 'clear' ? 'cheer' : fazaFrame(p, g.t);
-    const img = SPR.faza[name][p.dir];
+    const img = SPR.faza[g.stage ?? 2][name][p.dir];
     const jitter = g.hyperT > 0 && !state.reduced ? (g.t % 2) * 2 - 1 : 0;
-    const x = Math.round(p.x - 3 - cx) + jitter;
-    const y = Math.round(p.y + p.h - 18 - cy);
+    const x = Math.round(p.x + p.w / 2 - img.width / 2 - cx) + jitter;
+    const y = Math.round(p.y + p.h - img.height - cy);
     ctx.drawImage(img, x, y);
     if (g.hyperT > 0 && g.t % 3 === 0) rect(ctx, '#f7b733', x + 3 + (g.t % 10), y + (g.t % 16), 1, 1);
   }
@@ -353,6 +375,7 @@ export function createRenderer(canvas) {
     drawPlayer(g, cx, cy);
     for (const p of world.props) drawProp(p, cx, cy, g.t, true);
     drawParticles(cx, cy);
+    if (g.phase === 'grow') drawGrowth(g);
     state.lastCx = cx;
     state.lastCy = cy;
   }
@@ -433,7 +456,7 @@ export function drawPostcard(ctx, opts) {
   ctx.drawImage(palm, 236, floorY - palm.height);
 
   const name = faza ?? (ending ? (Math.floor(t / 20) % 2 ? 'cheer' : 'idle0') : (t % 240 < 120 ? 'sip1' : 'sip0'));
-  const img = SPR.faza[name][1];
+  const img = SPR.faza[opts.stage ?? LAST_STAGE][name][1];
   ctx.drawImage(img, Math.round(fazaX), floorY - img.height);
   const cupFrame = Math.floor(t / 16) % 2;
   ctx.drawImage(SPR.cup[cupFrame], Math.round(fazaX) + 26, floorY - 10);
