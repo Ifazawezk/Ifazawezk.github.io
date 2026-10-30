@@ -1,7 +1,8 @@
-import { TILE, T, overlaps, touchesTile } from './physics.js';
+import { TILE, T, PHYS, overlaps, touchesTile } from './physics.js';
 import { newPlayer, updatePlayer } from './player.js';
 import { moverPos } from './world.js';
 import { buildWorlds } from './levels/index.js';
+import { makeBug, updateBug, splitBug, BUG_POINTS } from './bugs.js';
 
 export const VIEW_W = 320;
 export const VIEW_H = 180;
@@ -11,6 +12,7 @@ const BUBBLE_LINGER = 150;
 const SIGN_RANGE = 42;
 export const CUP_POINTS = 10;
 export const CAFFEINE_FULL = 12;
+export const FULL_BATTERY = 3;
 const HYPER_TICKS = 420;
 
 // The world never changes during a run, so it lives outside the game state.
@@ -30,6 +32,9 @@ export function createGame() {
     deadT: 0,
     clearT: 0,
     retries: 0,
+    battery: FULL_BATTERY,
+    bugs: [],
+    stomped: 0,
     score: 0,
     best: 0,
     cups: [],
@@ -62,6 +67,7 @@ export function loadLevel(s, g, index) {
   g.bubble = null;
   g.deadT = 0;
   g.cups = world.cups.map((c) => ({ x: c.x, y: c.y, w: 10, h: 10, taken: false }));
+  g.bugs = world.bugs.map((b) => makeBug(b.type, b.x, b.feet, b));
   emit(g, 'level', { index, id: world.id });
 }
 
@@ -78,6 +84,7 @@ function respawn(g) {
   g.p.inv = 60;
   g.deadT = 0;
   g.bubble = null;
+  g.battery = FULL_BATTERY;
 }
 
 function die(g, why) {
@@ -147,6 +154,55 @@ function updateCups(g) {
   }
 }
 
+function hurt(g, fromX) {
+  const p = g.p;
+  if (p.inv > 0 || g.deadT > 0) return;
+  g.battery--;
+  emit(g, 'hurt');
+  if (g.battery <= 0) {
+    die(g, 'battery');
+    return;
+  }
+  p.inv = 90;
+  p.vy = -2.8;
+  p.onGround = false;
+  p.vx = (p.x + p.w / 2 < fromX ? -1 : 1) * 2.2;
+}
+
+function stomp(g, b, input) {
+  const p = g.p;
+  p.vy = input.jump ? PHYS.STOMP_V * 1.5 : PHYS.STOMP_V;
+  p.onGround = false;
+  p.coyote = 0;
+  b.hp--;
+  if (b.hp > 0) {
+    b.safe = 30;
+    emit(g, 'stomp-soft', { name: `bug.${b.type}Hit`, x: b.x + b.w / 2, y: b.y });
+    return;
+  }
+  b.dead = 1;
+  g.stomped++;
+  addScore(g, BUG_POINTS);
+  emit(g, 'stomp', { name: `bug.${b.type}`, x: b.x + b.w / 2, y: b.y });
+  g.bugs.push(...splitBug(b));
+}
+
+function updateBugs(g, world, input) {
+  const p = g.p;
+  // Bugs added by a split wait until the next tick to start moving.
+  const count = g.bugs.length;
+  for (let i = 0; i < count; i++) {
+    const b = g.bugs[i];
+    updateBug(b, world, g.t, p);
+    if (b.dead > 0 || b.safe > 0 || !overlaps(p, b) || g.deadT > 0) continue;
+    const onTop = p.vy > 0 && p.y + p.h - b.y < Math.max(9, b.h * 0.7);
+    if (onTop || g.hyperT > 0) stomp(g, b, input);
+    else hurt(g, b.x + b.w / 2);
+  }
+  // Keep the list short; a flattened bug only needs drawing for half a second.
+  if (g.bugs.length > 0 && g.t % 60 === 0) g.bugs = g.bugs.filter((b) => b.dead < 40);
+}
+
 function updateSigns(g, world) {
   const p = g.p;
   const cx = p.x + p.w / 2;
@@ -196,6 +252,9 @@ function playTick(s, g, input) {
 
   if (touchesTile(p, world, [T.WATER])) { die(g, 'water'); return; }
   if (p.y > world.rows * TILE + 24) { die(g, 'fall'); return; }
+  if (touchesTile(p, world, [T.SPIKE])) hurt(g, p.x + p.w / 2 - p.dir * 4);
+  updateBugs(g, world, input);
+  if (g.deadT > 0) return;
 
   if (g.hyperT > 0) g.hyperT--;
   updateCups(g);

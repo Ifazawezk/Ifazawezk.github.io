@@ -36,6 +36,16 @@ button, a { font-family: inherit; }
 #hud-meter { width: calc(30 * var(--px)); height: calc(5 * var(--px)); background: var(--ink); border: var(--px) solid var(--ink); }
 #meter-fill { display: block; height: 100%; width: 0; background: var(--tea); }
 #hud-best { margin-inline-end: auto; }
+#hud-battery { display: flex; gap: var(--px); padding: var(--px); background: var(--ink); }
+#hud-battery i { display: block; width: calc(5 * var(--px)); height: calc(4 * var(--px)); background: #8fd14f; }
+#hud-battery i.off { background: #3a2f52; }
+#hud-battery.low i:not(.off) { background: #e0403f; }
+
+#floats { position: absolute; inset: 0; overflow: hidden; }
+.float { position: absolute; transform: translateX(-50%); white-space: nowrap; font-size: calc(7 * var(--px) * var(--text-scale)); font-weight: 600; color: var(--tea); text-shadow: var(--px) var(--px) 0 var(--ink), calc(-1 * var(--px)) 0 0 var(--ink), var(--px) 0 0 var(--ink), 0 calc(-1 * var(--px)) 0 var(--ink); animation: float-up 1.15s steps(10) forwards; }
+.float.bad { color: #ff9a8a; }
+.float.good { color: #b6f07a; }
+@keyframes float-up { to { transform: translate(-50%, calc(-22 * var(--px))); opacity: 0.1; } }
 
 #bubble { position: absolute; top: calc(22 * var(--px)); left: calc(50 * var(--px)); right: calc(50 * var(--px)); display: flex; flex-direction: column; align-items: stretch; }
 #bubble-box {

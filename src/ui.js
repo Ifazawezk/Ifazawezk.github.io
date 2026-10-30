@@ -24,6 +24,9 @@ export function createUI({ lang, boringHref }) {
     score: $('score'),
     best: $('best'),
     meter: $('meter-fill'),
+    battery: $('hud-battery'),
+    cells: [...$('hud-battery').children],
+    floats: $('floats'),
   };
 
   const state = { lang, bubbleKey: null, bannerT: 0, hud: {} };
@@ -63,6 +66,19 @@ export function createUI({ lang, boringHref }) {
     els.bubbleText.textContent = '';
   }
 
+  // A word that pops up where something happened, then cleans up after itself.
+  function float(text, x, y, tone = '') {
+    const node = document.createElement('div');
+    node.className = `float ${tone}`;
+    node.textContent = text;
+    node.style.left = `${Math.max(14, Math.min(86, (x / VIEW_W) * 100))}%`;
+    node.style.top = `${Math.max(14, (y / VIEW_H) * 100)}%`;
+    node.addEventListener('animationend', () => node.remove());
+    els.floats.append(node);
+    while (els.floats.children.length > 5) els.floats.firstChild.remove();
+    setTimeout(() => node.remove(), 1600);
+  }
+
   function setNumber(el, key, value) {
     if (state.hud[key] === value) return;
     state.hud[key] = value;
@@ -78,6 +94,11 @@ export function createUI({ lang, boringHref }) {
       state.hud.meter = meter;
       els.meter.style.width = `${meter}%`;
     }
+    if (state.hud.battery !== g.battery) {
+      state.hud.battery = g.battery;
+      els.cells.forEach((cell, i) => cell.classList.toggle('off', i >= g.battery));
+      els.battery.classList.toggle('low', g.battery === 1);
+    }
     if (state.bannerT > 0) {
       state.bannerT--;
       if (state.bannerT === 0) els.banner.hidden = true;
@@ -91,5 +112,5 @@ export function createUI({ lang, boringHref }) {
   }
 
   applyLang();
-  return { t, update, showBanner, applyLang, state, els, VIEW_H };
+  return { t, update, showBanner, applyLang, float, state, els };
 }
